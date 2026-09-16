@@ -1,0 +1,284 @@
+rules_version = '2';
+
+// Regole di sicurezza — Atletico ma non troppo
+// Pubblica con: console Firebase > Firestore > Regole (incolla e Pubblica)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- Helper ----------
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function hasAccount() {
+      return signedIn() && exists(/databases/$(database)/documents/accounts/$(request.auth.uid));
+    }
+    function myPlayerId() {
+      return get(/databases/$(database)/documents/accounts/$(request.auth.uid)).data.playerId;
+    }
+    function isMember() {
+      return hasAccount()
+        && get(/databases/$(database)/documents/players/$(myPlayerId())).data.attivo == true;
+    }
+    function canRead() {
+      return isAdmin() || isMember();
+    }
+    function isGoogle() {
+      return signedIn() && ('google.com' in request.auth.token.firebase.identities);
+    }
+    function matchData(matchId) {
+      return get(/databases/$(database)/documents/matches/$(matchId)).data;
+    }
+
+    // ---------- Configurazione ----------
+    match /config/{docId} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Admin (il primo si crea a mano dalla console) ----------
+    match /admins/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list, write: if isAdmin();
+    }
+
+    // ---------- Giocatori ----------
+    match /players/{playerId} {
+      allow read: if canRead();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        isMember()
+        && myPlayerId() == playerId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['soprannome', 'avatar', 'colore', 'ruolo', 'piede'])
+        && request.resource.data.soprannome is string && request.resource.data.soprannome.size() <= 30
+        && request.resource.data.avatar is string && request.resource.data.avatar.size() <= 16
+        && request.resource.data.colore is string && request.resource.data.colore.size() <= 9
+      );
+    }
+
+    // Livelli per le squadre: solo admin
+    match /playerLevels/{playerId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------- Account (uid -> giocatore) ----------
+    match /accounts/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+
+      // Admin all'approvazione, oppure l'utente stesso con un link personale valido
+      allow create: if isAdmin() || (
+        signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['playerId', 'metodo', 'token', 'email', 'creatoIl', 'ultimoAccesso'])
+        && request.resource.data.playerId is string
+        && request.resource.data.token is string
+        && request.resource.data.token.size() >= 20
+        && exists(/databases/$(database)/documents/inviteTokens/$(request.resource.data.playerId))
+        && get(/databases/$(database)/documents/inviteTokens/$(request.resource.data.playerId)).data.attivo == true
+        && get(/databases/$(database)/documents/inviteTokens/$(request.resource.data.playerId)).data.token == request.resource.data.token
+        && get(/databases/$(database)/documents/players/$(request.resource.data.playerId)).data.attivo == true
+        && (
+          request.resource.data.metodo == 'link'
+          || (request.resource.data.metodo == 'google' && isGoogle() && request.resource.data.email == request.auth.token.email)
+        )
+      );
+
+      // L'utente aggiorna solo ultimo accesso e, dopo aver collegato Google, metodo/email
+      allow update: if isAdmin() || (
+        signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ultimoAccesso', 'metodo', 'email'])
+        && (request.resource.data.metodo == resource.data.metodo || (request.resource.data.metodo == 'google' && isGoogle()))
+        && (
+          request.resource.data.get('email', null) == resource.data.get('email', null)
+          || (isGoogle() && request.resource.data.email == request.auth.token.email)
+        )
+      );
+      allow delete: if isAdmin();
+    }
+
+    // ---------- Richieste di profilo (accesso Google) ----------
+    function validRequest() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['nome', 'soprannome', 'avatar', 'colore', 'ruolo', 'piede', 'email', 'stato', 'creatoIl'])
+        && d.stato == 'in_attesa'
+        && d.nome is string && d.nome.size() >= 2 && d.nome.size() <= 30
+        && d.soprannome is string && d.soprannome.size() <= 30
+        && d.email == request.auth.token.email;
+    }
+    match /profileRequests/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list, delete: if isAdmin();
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && isGoogle()
+        && !exists(/databases/$(database)/documents/accounts/$(uid))
+        && validRequest();
+      allow update: if isAdmin() || (
+        signedIn()
+        && request.auth.uid == uid
+        && isGoogle()
+        && resource.data.stato == 'in_attesa'
+        && validRequest()
+      );
+    }
+
+    // ---------- Token dei link personali: mai leggibili dai giocatori ----------
+    match /inviteTokens/{playerId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ---------- Campi ----------
+    match /fields/{fieldId} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Partite ----------
+    function validAutoMatch(matchId) {
+      let d = request.resource.data;
+      let cfg = get(/databases/$(database)/documents/config/app).data;
+      return d.keys().hasOnly(['data', 'anno', 'ora', 'inizio', 'chiusura', 'fieldId', 'campoSnapshot', 'posti', 'tipo', 'stato', 'creatoIl'])
+        && d.data == matchId
+        && d.tipo == 'regolare'
+        && d.stato == 'aperta'
+        && d.fieldId == cfg.campoPredefinito
+        && d.posti is number && d.posti >= 2 && d.posti <= 30
+        && d.inizio is timestamp
+        && d.chiusura is timestamp
+        && d.chiusura <= d.inizio
+        && d.inizio > request.time - duration.value(1, 'd')
+        && d.inizio < request.time + duration.value(15, 'd')
+        && d.creatoIl == request.time;
+    }
+
+    function validPresence(matchId, playerId) {
+      let m = matchData(matchId);
+      let d = request.resource.data;
+      let wasSi = resource != null && resource.data.stato == 'si';
+      return m.stato == 'aperta'
+        && request.time < m.chiusura
+        && exists(/databases/$(database)/documents/players/$(playerId))
+        && d.keys().hasOnly(['stato', 'timestampIscrizione', 'ospiti', 'aggiornatoDaUid', 'aggiornatoDaPlayer', 'aggiornatoIl'])
+        && (d.stato == null || d.stato in ['si', 'forse', 'no'])
+        && d.ospiti is list && d.ospiti.size() <= 3
+        && d.aggiornatoDaUid == request.auth.uid
+        && d.aggiornatoDaPlayer == myPlayerId()
+        && d.aggiornatoIl == request.time
+        && (
+          d.stato == 'si'
+            ? (wasSi ? d.timestampIscrizione == resource.data.timestampIscrizione : d.timestampIscrizione == request.time)
+            : d.timestampIscrizione == null
+        );
+    }
+
+    function validVote(matchId, voterId) {
+      let m = matchData(matchId);
+      let d = request.resource.data;
+      return voterId == myPlayerId()
+        && m.stato == 'giocata'
+        && request.time < m.postPartitaFino
+        && voterId in m.giocatori
+        && d.votatoPer in m.giocatori
+        && d.votatoPer != voterId
+        && d.keys().hasOnly(['votatoPer', 'uid', 'timestamp'])
+        && d.uid == request.auth.uid
+        && d.timestamp == request.time;
+    }
+
+    function criterioOk(c, k) {
+      return !(k in c) || (c[k] is int && c[k] >= 1 && c[k] <= 5);
+    }
+
+    function validReview(matchId, playerId) {
+      let m = matchData(matchId);
+      let d = request.resource.data;
+      return playerId == myPlayerId()
+        && m.stato == 'giocata'
+        && request.time < m.postPartitaFino
+        && playerId in m.giocatori
+        && d.fieldId == m.fieldId
+        && d.voto is int && d.voto >= 1 && d.voto <= 5
+        && d.criteri is map
+        && d.criteri.keys().hasOnly(['fondo', 'illuminazione', 'spogliatoi', 'qualitaPrezzo'])
+        && criterioOk(d.criteri, 'fondo')
+        && criterioOk(d.criteri, 'illuminazione')
+        && criterioOk(d.criteri, 'spogliatoi')
+        && criterioOk(d.criteri, 'qualitaPrezzo')
+        && d.commento is string && d.commento.size() <= 280
+        && d.uid == request.auth.uid
+        && d.aggiornatoIl == request.time;
+    }
+
+    match /matches/{matchId} {
+      allow read: if canRead();
+      // La partita regolare del mercoledì la può creare il primo membro che apre l'app
+      allow create: if isAdmin() || (isMember() && validAutoMatch(matchId));
+      allow update, delete: if isAdmin();
+
+      // Presenze: fiducia, chiunque segna chiunque (tracciato nei log)
+      match /presences/{playerId} {
+        allow read: if canRead();
+        allow create, update: if isAdmin() || (isMember() && validPresence(matchId, playerId));
+        allow delete: if isAdmin();
+      }
+
+      // Voto MVP: uno per giocatore, segreto fino all'archiviazione
+      match /mvpVotes/{voterId} {
+        allow get: if isAdmin() || (isMember() && (voterId == myPlayerId() || matchData(matchId).stato == 'archiviata'));
+        allow list: if isAdmin() || (isMember() && matchData(matchId).stato == 'archiviata');
+        allow create: if isMember() && validVote(matchId, voterId);
+        allow update, delete: if isAdmin();
+      }
+
+      // Voto al campo
+      match /fieldReviews/{playerId} {
+        allow read: if canRead();
+        allow create: if isMember()
+          && validReview(matchId, playerId)
+          && request.resource.data.keys().hasOnly(['fieldId', 'voto', 'criteri', 'commento', 'uid', 'creatoIl', 'aggiornatoIl'])
+          && request.resource.data.creatoIl == request.time;
+        allow update: if isAdmin() || (
+          isMember()
+          && validReview(matchId, playerId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['voto', 'criteri', 'commento', 'aggiornatoIl'])
+        );
+        allow delete: if isAdmin() || (
+          isMember()
+          && playerId == myPlayerId()
+          && matchData(matchId).stato == 'giocata'
+          && request.time < matchData(matchId).postPartitaFino
+        );
+      }
+    }
+
+    // ---------- Statistiche (scritte dal dispositivo admin) ----------
+    match /playerStats/{playerId} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+    match /fieldStats/{fieldId} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+    match /yearAwards/{anno} {
+      allow read: if canRead();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Registro modifiche: solo aggiunte ----------
+    match /logs/{logId} {
+      allow read: if canRead();
+      allow create: if (isAdmin() || isMember())
+        && request.resource.data.keys().hasOnly(['matchId', 'uid', 'playerAutore', 'azione', 'target', 'prima', 'dopo', 'dettaglio', 'timestamp'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.timestamp == request.time
+        && request.resource.data.azione is string
+        && request.resource.data.azione.size() <= 40;
+      allow update, delete: if false;
+    }
+  }
+}
