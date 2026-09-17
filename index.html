@@ -114,8 +114,8 @@ p { margin: 0; }
 .ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Shell ---------- */
+.appbar { position: sticky; top: 0; z-index: 20; }
 .topbar {
-  position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: .6rem;
   padding: calc(env(safe-area-inset-top, 0px) + .5rem) 1rem .5rem;
   background: var(--navy); color: var(--crema);
@@ -128,6 +128,35 @@ p { margin: 0; }
   height: 6px;
   background: repeating-linear-gradient(90deg, var(--rosso) 0 18px, var(--azzurro) 18px 36px);
 }
+/* ---------- Striscia partita ---------- */
+#matchbar:not(:empty) { background: var(--surface); border-bottom: 1px solid var(--line); }
+.matchbar {
+  max-width: 640px; margin: 0 auto;
+  display: flex; align-items: center; gap: .6rem; padding: .4rem 1rem;
+}
+.matchbar .mb-main {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  background: none; border: 0; padding: 0; margin: 0; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.matchbar .mb-when { font-family: var(--font-display); font-weight: 600; font-size: .92rem; line-height: 1.15; }
+.matchbar .mb-where { font-size: .72rem; color: var(--ink-soft); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.matchbar .mb-count { font-family: var(--font-display); font-weight: 600; font-size: .9rem; white-space: nowrap; }
+.matchbar .mb-count.full { color: var(--rosso); }
+.matchbar .mb-me { font-size: 1.1rem; line-height: 1; }
+
+/* ---------- Passi organizzazione ---------- */
+.steps { display: flex; flex-direction: column; gap: .5rem; }
+.steps ol { list-style: none; margin: 0; padding: 0; display: flex; gap: .35rem; }
+.steps li { flex: 1; position: relative; padding-top: .5rem; font-size: .64rem; text-align: center; color: var(--ink-soft); }
+.steps li::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 4px; border-radius: 2px; background: currentColor; opacity: .25; }
+.steps li.done { color: var(--ok); }
+.steps li.now { color: var(--accent); font-weight: 700; }
+.steps li.done::before, .steps li.now::before { opacity: 1; }
+.hero .steps { margin-top: .9rem; background: rgba(9, 18, 34, .92); border-radius: 14px; padding: .65rem .7rem; }
+.hero .steps li { color: rgba(255, 246, 227, .55); }
+.hero .steps li.done { color: rgba(255, 246, 227, .92); }
+.hero .steps li.now { color: var(--oro); }
+
 main#view {
   max-width: 640px; margin: 0 auto;
   padding: 1rem 1rem calc(var(--tabbar-h) + var(--safe-b) + 1.5rem);
@@ -415,12 +444,15 @@ textarea { min-height: 80px; resize: vertical; }
 <div id="gate"><div class="gate"><img class="crest splash-pulse" src="assets/logo.png" alt="Stemma Atletico ma non troppo"><p class="muted">Caricamento…</p></div></div>
 
 <div id="shell" class="hidden">
+  <div class="appbar">
   <header class="topbar">
     <img src="assets/icon-192.png" alt="">
     <div class="title">Atletico ma non troppo<span>calcetto del mercoledì</span></div>
     <button class="icon-btn" data-act="theme" aria-label="Cambia tema">◐</button>
   </header>
   <div class="stripes" aria-hidden="true"></div>
+  <div id="matchbar"></div>
+  </div>
   <main id="view"></main>
   <nav class="tabbar" aria-label="Navigazione principale">
     <button data-act="go" data-href="#/partita" data-tab="partita"><span class="ico">⚽</span>Partita</button>
@@ -1574,6 +1606,8 @@ function doRender() {
     html = `<div class="card"><p>Errore di visualizzazione: ${esc(e.message)}</p></div>`;
   }
   view.innerHTML = html;
+  const mb = $('#matchbar');
+  if (mb) { try { mb.innerHTML = renderMatchBar(); } catch (e) { console.error(e); mb.innerHTML = ''; } }
   window.scrollTo(0, y);
   const tab = ['partita', 'classifiche', 'storico', 'campi'].includes(S.route.name) ? S.route.name
     : (S.route.name === 'giocatore' && S.route.id !== S.myPlayerId) ? 'classifiche' : 'profilo';
@@ -2108,6 +2142,41 @@ function carriers(m, lineup) {
   return { pallone, pettorine, palloneSugg: !m.pallone, pettorineSugg: !m.pettorine };
 }
 
+function dataCorta(dateStr) {
+  const [g, ...resto] = formatDataEstesa(dateStr).split(' ');
+  return `${g.slice(0, 3)} ${resto.join(' ')}`;
+}
+
+function renderMatchBar() {
+  if (S.gate !== 'app') return '';
+  const m = currentMatch();
+  if (!m || m.stato === 'annullata') return '';
+  const f = matchField(m);
+  const posti = Number(m.posti) || 0;
+  const lineup = S.presencesLoaded ? currentLineup(m) : null;
+  const si = lineup ? lineup.totaleSi : null;
+  const pid = S.myPlayerId;
+  const mio = pid ? S.presences[pid]?.stato : null;
+  const ICO = { si: '✅', forse: '🤔', no: '❌' };
+  const chiuse = m.stato !== 'aperta' || ms(m.chiusura) <= nowMs();
+  let destra;
+  if (pid && S.players[pid] && !mio && canEditPresence(m)) {
+    destra = `<button class="btn small primary" data-act="setPresence" data-pid="${esc(pid)}" data-stato="si">Ci sono</button>`;
+  } else if (mio) {
+    destra = `<span class="mb-me" title="La tua risposta">${ICO[mio] || ''}</span>`;
+  } else {
+    destra = `<span class="mb-me muted" aria-hidden="true">–</span>`;
+  }
+  return `<div class="matchbar">
+    <button class="mb-main" data-act="go" data-href="#/partita" aria-label="Vai alla partita">
+      <span class="mb-when">${esc(dataCorta(m.data))} · ${esc(m.ora)}${chiuse ? ' · chiuse' : ''}</span>
+      <span class="mb-where">${esc(f.nome || 'Campo')}</span>
+    </button>
+    ${si != null && posti ? `<span class="mb-count ${si >= posti ? 'full' : ''}">${si}/${posti}</span>` : ''}
+    ${destra}
+  </div>`;
+}
+
 function renderPartita() {
   const out = [];
   if (S.inAppHint) {
@@ -2126,10 +2195,10 @@ function renderPartita() {
   }
 
   const post = S.matches.filter(m => isPostOpen(m)).sort((a, b) => b.data.localeCompare(a.data));
-  for (const m of post) out.push(renderPostMatch(m));
 
   const m = currentMatch();
   if (!m) {
+    for (const x of post) out.push(renderPostMatch(x));
     if (!S.matchesLoaded) out.push('<div class="empty"><div class="big">⏳</div>Caricamento partita…</div>');
     else if (!S.config.campoPredefinito) out.push('<div class="card empty"><div class="big">🏟️</div><p>Nessuna partita in programma: l\'admin deve ancora impostare il campo.</p></div>');
     else out.push('<div class="card empty"><div class="big">📋</div><p>Sto preparando la partita del prossimo mercoledì…</p></div>');
@@ -2138,6 +2207,7 @@ function renderPartita() {
 
   const lineup = currentLineup(m);
   out.push(renderHero(m, lineup));
+  for (const x of post) out.push(renderPostMatch(x));
   if (m.stato !== 'annullata') {
     out.push(renderMyPresence(m, lineup));
     out.push(renderLineupCard(m, lineup));
@@ -2180,6 +2250,7 @@ function renderHero(m, lineup) {
         ${m.stato !== 'annullata' ? '<button class="btn small" data-act="shareMatch">WhatsApp</button><button class="btn small" data-act="calendar">Calendario</button>' : ''}
         ${S.isAdmin ? `<button class="btn small" data-act="adminMatch" data-id="${esc(m.id)}">Gestisci</button>` : ''}
       </div>
+      ${renderAdminSteps(m)}
     </section>`;
 }
 
@@ -2340,6 +2411,7 @@ function renderPostMatch(m) {
             : `<div class="row between"><span class="small">Come ti sei trovato a ${esc(f.nome || 'questo campo')}?</span><button class="btn small primary" data-act="reviewField" data-match="${esc(m.id)}">Vota il campo</button></div>`}
         </div>
         ${left ? `<p class="tiny muted">Voti aperti ancora per ${left}.</p>` : ''}` : ''}
+      ${renderAdminSteps(m)}
     </section>`;
 }
 
@@ -3281,9 +3353,9 @@ function openAdminMatch(id) {
 
       <div class="card flat stack">
         <h3>Risultato</h3>
-        ${!hasTeams ? '<p class="small muted">Per registrare il risultato servono le squadre.</p>' : ''}
+        ${!hasTeams ? '<p class="small muted">Senza squadre vengono generate in automatico dai titolari, poi puoi correggerle.</p>' : ''}
         <div class="row wrap">
-          <button class="btn small primary" data-act="resultEditor" data-id="${esc(m.id)}" ${!hasTeams ? 'disabled' : ''}>${played ? 'Correggi risultato' : 'Registra risultato'}</button>
+          <button class="btn small primary" data-act="resultEditor" data-id="${esc(m.id)}">${played ? 'Correggi risultato' : 'Registra risultato'}</button>
           ${m.stato === 'giocata' ? '<button class="btn small" data-act="archiveMatch">Chiudi voti e archivia</button>' : ''}
           ${m.stato === 'archiviata' ? '<button class="btn small" data-act="reopenPost">Riapri post-partita</button>' : ''}
         </div>
@@ -3322,7 +3394,7 @@ function sheetMatchId(el) {
 }
 
 ACTIONS.matchSetStato = async el => {
-  const id = sheetMatchId(el);
+  const id = el.dataset.id || sheetMatchId(el);
   const m = S.matches.find(x => x.id === id);
   if (!m) return;
   const stato = el.dataset.v;
@@ -3405,6 +3477,88 @@ ACTIONS.newMatch = () => {
       });
     }
   });
+};
+
+/* ---------- Passi di organizzazione ---------- */
+
+function matchStepList(m) {
+  const hasTeams = (m.squadre?.a?.length || 0) + (m.squadre?.b?.length || 0) > 0;
+  const played = m.stato === 'giocata' || m.stato === 'archiviata';
+  const iscrizioniChiuse = m.stato !== 'aperta' || ms(m.chiusura) <= nowMs();
+  return [
+    { nome: 'Iscrizioni', done: iscrizioniChiuse },
+    { nome: 'Squadre', done: hasTeams && !!m.squadrePubblicate },
+    { nome: 'Risultato', done: played },
+    { nome: 'Archivio', done: m.stato === 'archiviata' }
+  ];
+}
+
+function renderAdminSteps(m) {
+  if (!S.isAdmin || !m || m.stato === 'annullata') return '';
+  const steps = matchStepList(m);
+  const idx = steps.findIndex(s => !s.done);
+  if (idx < 0) return '';
+  const hasTeams = (m.squadre?.a?.length || 0) + (m.squadre?.b?.length || 0) > 0;
+  const id = esc(m.id);
+  let actions;
+  if (idx === 0) {
+    actions = `<button class="btn small primary" data-act="matchSetStato" data-id="${id}" data-v="chiusa">Chiudi iscrizioni</button>
+      <button class="btn small" data-act="quickTeams" data-id="${id}" data-force="1">${hasTeams ? 'Rifai squadre' : 'Genera squadre'}</button>`;
+  } else if (idx === 1) {
+    actions = `<button class="btn small primary" data-act="quickTeams" data-id="${id}">${hasTeams ? 'Pubblica squadre' : 'Genera e pubblica squadre'}</button>
+      <button class="btn small" data-act="teamsEditor" data-id="${id}">Modifica a mano</button>`;
+  } else if (idx === 2) {
+    actions = `<button class="btn small primary" data-act="resultEditor" data-id="${id}">Registra risultato</button>
+      <button class="btn small" data-act="teamsEditor" data-id="${id}">Modifica squadre</button>`;
+  } else {
+    actions = `<button class="btn small primary" data-act="archiveMatch" data-id="${id}">Chiudi voti e archivia</button>
+      <button class="btn small" data-act="resultEditor" data-id="${id}">Correggi risultato</button>`;
+  }
+  return `<div class="steps" role="group" aria-label="Organizzazione partita">
+    <ol>${steps.map((s, i) => `<li class="${s.done ? 'done' : i === idx ? 'now' : ''}">${esc(s.nome)}</li>`).join('')}</ol>
+    <div class="row wrap" style="gap:.5rem">${actions}</div>
+  </div>`;
+}
+
+async function buildBalancedTeams(id, m) {
+  const presences = id === S.currentId ? S.presences : await loadPresences(id);
+  const lu = computeLineup(presencesForLogic(presences), Number(m.posti) || 0, []);
+  const names = { ...(m.ospitiNomi || {}) };
+  lu.titolari.concat(lu.attesa).forEach(e => { if (e.tipo === 'ospite') names[e.key] = e.nome; });
+  const keys = lu.titolari.map(e => e.key);
+  if (keys.length < 2) { toast('Servono almeno 2 titolari', 'err'); return null; }
+  const levelOf = k => String(k).startsWith('ospite:') ? 3 : (S.levels[k] ?? 3);
+  const lastPlayed = S.matches.filter(x => ['giocata', 'archiviata'].includes(x.stato) && x.id !== id && x.data < m.data)
+    .sort((a, b) => b.data.localeCompare(a.data))[0];
+  const res = balanceTeams(keys.map(k => ({ id: k, livello: levelOf(k) })), lastPairsFromTeams(lastPlayed?.squadre));
+  const ospitiNomi = {};
+  keys.filter(k => String(k).startsWith('ospite:')).forEach(k => { ospitiNomi[k] = names[k] || 'Ospite'; });
+  return { teams: { a: res.a, b: res.b }, diff: res.diff, ospitiNomi };
+}
+
+ACTIONS.quickTeams = async el => {
+  const id = el.dataset.id;
+  const m = S.matches.find(x => x.id === id);
+  if (!m) return;
+  closeAllSheets();
+  const hasTeams = (m.squadre?.a?.length || 0) + (m.squadre?.b?.length || 0) > 0;
+  if (hasTeams && el.dataset.force !== '1') {
+    await guard(async () => {
+      const batch = writeBatch(db);
+      batch.update(doc(db, 'matches', id), { squadrePubblicate: true });
+      addLog(batch, { matchId: id, azione: 'squadre', dopo: 'pubblicate' });
+      await batch.commit();
+    }, 'Squadre pubblicate');
+    return;
+  }
+  const built = await buildBalancedTeams(id, m);
+  if (!built) return;
+  await guard(async () => {
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'matches', id), { squadre: built.teams, squadrePubblicate: true, ospitiNomi: built.ospitiNomi });
+    addLog(batch, { matchId: id, azione: 'squadre', dopo: 'pubblicate' });
+    await batch.commit();
+  }, `Squadre pubblicate · differenza livelli ${built.diff}`);
 };
 
 /* ---------- Presenze (admin, qualsiasi partita) ---------- */
@@ -3568,21 +3722,29 @@ ACTIONS.teamsEditor = async el => {
 
 /* ---------- Risultato ---------- */
 
-ACTIONS.resultEditor = el => {
+ACTIONS.resultEditor = async el => {
   const id = el.dataset.id;
   const m = S.matches.find(x => x.id === id);
   if (!m) return;
   closeAllSheets();
   const cn = S.config.nomiSquadre;
-  const all = [...(m.squadre?.a || []), ...(m.squadre?.b || [])];
+  let sq = { a: [...(m.squadre?.a || [])], b: [...(m.squadre?.b || [])] };
+  let ospitiNomi = { ...(m.ospitiNomi || {}) };
+  let autoTeams = false;
+  if (!sq.a.length && !sq.b.length) {
+    const built = await buildBalancedTeams(id, m);
+    if (!built) return;
+    sq = built.teams; ospitiNomi = { ...ospitiNomi, ...built.ospitiNomi }; autoTeams = true;
+  }
+  const all = [...sq.a, ...sq.b];
   const gol = golByPlayerOfMatch(m);
   const assist = {}; (m.assist || []).forEach(x => { assist[x.playerId] = x.n; });
   const pali = {}; (m.pali || []).forEach(x => { pali[x.playerId] = x.n; });
   const st = { golA: Number(m.golA) || 0, golB: Number(m.golB) || 0, gol: { ...gol }, assist: { ...assist }, pali: { ...pali }, assenti: new Set(m.assenti || []) };
-  const nameOf = k => teamMemberName(m, k);
+  const nameOf = k => teamMemberName({ ...m, ospitiNomi }, k);
   const stepper = (key, pid, v) => `<span class="stepper"><button type="button" data-step="${key}" data-pid="${esc(pid)}" data-d="-1" aria-label="Meno">−</button><span class="v">${v || 0}</span><button type="button" data-step="${key}" data-pid="${esc(pid)}" data-d="1" aria-label="Più">+</button></span>`;
   const teamBlock = k => `<div class="stack tight"><h3>${esc(cn[k])}</h3>
-    ${(m.squadre?.[k] || []).map(pid => `<div class="card flat stack tight" style="padding:.6rem">
+    ${(sq[k] || []).map(pid => `<div class="card flat stack tight" style="padding:.6rem">
       <div class="row between"><span class="row">${avatarHtml(pid, 'sm')}<strong class="ellipsis">${esc(nameOf(pid))}</strong></span>
         ${S.players[pid] ? `<label class="check small"><input type="checkbox" data-assente="${esc(pid)}" ${st.assenti.has(pid) ? 'checked' : ''}> Assente</label>` : ''}</div>
       ${st.assenti.has(pid) ? '' : `<div class="row between small"><span>Gol</span>${stepper('gol', pid, st.gol[pid])}</div>
@@ -3590,7 +3752,7 @@ ACTIONS.resultEditor = el => {
       <div class="row between small"><span>Pali/traverse</span>${stepper('pali', pid, st.pali[pid])}</div>`}
     </div>`).join('')}</div>`;
   const computed = () => {
-    const sumTeam = k => (m.squadre?.[k] || []).filter(p => !st.assenti.has(p)).reduce((s, p) => s + (st.gol[p] || 0), 0);
+    const sumTeam = k => (sq[k] || []).filter(p => !st.assenti.has(p)).reduce((s, p) => s + (st.gol[p] || 0), 0);
     return { a: sumTeam('a'), b: sumTeam('b') };
   };
   const view = () => {
@@ -3605,13 +3767,14 @@ ACTIONS.resultEditor = el => {
         ${(c.a !== st.golA || c.b !== st.golB) ? `<button type="button" class="btn small" data-usecomp>Usa i marcatori: ${c.a} – ${c.b}</button>` : ''}
       </div>
       ${teamBlock('a')}${teamBlock('b')}
+      ${autoTeams ? '<p class="tiny muted">Squadre generate in automatico dai titolari: se non corrispondono, chiudi e usa Modifica squadre.</p>' : ''}
       <p class="tiny muted">Gli assenti vengono tolti dalla squadra e contano nelle statistiche di affidabilità.</p>
     </div>`;
   };
   openSheet({
     title: `Risultato ${formatDataBreve(m.data)}`,
     body: view(),
-    foot: `<button class="btn" data-close>Annulla</button><button class="btn primary" data-saveres>Salva e chiudi partita</button>`,
+    foot: `<button class="btn" data-close>Annulla</button><button class="btn" data-saveres="arch">Salva e archivia</button><button class="btn primary" data-saveres="1">Salva e chiudi</button>`,
     onMount(sheet, api) {
       const refresh = () => { const y = sheet.scrollTop; api.setBody(view()); sheet.scrollTop = y; };
       sheet.addEventListener('change', ev => {
@@ -3630,8 +3793,10 @@ ACTIONS.resultEditor = el => {
           refresh(); return;
         }
         if (ev.target.closest('[data-usecomp]')) { const c = computed(); st.golA = c.a; st.golB = c.b; refresh(); return; }
-        if (!ev.target.closest('[data-saveres]')) return;
-        const squadre = { a: (m.squadre?.a || []).filter(p => !st.assenti.has(p)), b: (m.squadre?.b || []).filter(p => !st.assenti.has(p)) };
+        const sv = ev.target.closest('[data-saveres]');
+        if (!sv) return;
+        const archiviaSubito = sv.dataset.saveres === 'arch';
+        const squadre = { a: sq.a.filter(p => !st.assenti.has(p)), b: sq.b.filter(p => !st.assenti.has(p)) };
         const inT = [...squadre.a, ...squadre.b];
         const list = obj => Object.entries(obj).filter(([p, v]) => v > 0 && inT.includes(p));
         const durata = (Number(S.config.durataMinuti) || 60) * 60e3;
@@ -3645,9 +3810,14 @@ ACTIONS.resultEditor = el => {
           pali: list(st.pali).map(([playerId, n]) => ({ playerId, n })),
           assenti: [...st.assenti]
         };
+        if (autoTeams) { upd.squadrePubblicate = true; upd.ospitiNomi = ospitiNomi; }
         if (m.stato !== 'archiviata') {
           upd.stato = 'giocata';
           upd.postPartitaFino = Timestamp.fromMillis(fineGara + (Number(S.config.finestraPostPartitaOre) || 48) * 3600e3);
+        }
+        if (archiviaSubito && m.stato !== 'archiviata') {
+          const conferma = await confirmSheet({ title: 'Salva e archivia', text: 'Il voto MVP non verrà aperto e la partita sarà archiviata subito. Continuare?', okText: 'Archivia' });
+          if (!conferma) return;
         }
         api.close();
         const ok = await guard(async () => {
@@ -3657,7 +3827,9 @@ ACTIONS.resultEditor = el => {
           await batch.commit();
           return true;
         }, 'Risultato salvato');
-        if (ok) recalcStats({ silent: true });
+        if (!ok) return;
+        if (archiviaSubito && m.stato !== 'archiviata') await archiveMatch(id);
+        else recalcStats({ silent: true });
       });
     }
   });
@@ -3689,7 +3861,7 @@ async function archiveMatch(id, { silent = false } = {}) {
 }
 
 ACTIONS.archiveMatch = async el => {
-  const id = sheetMatchId(el);
+  const id = el.dataset.id || sheetMatchId(el);
   closeAllSheets();
   const ok = await confirmSheet({ title: 'Chiudi voti e archivia', text: 'Il voto MVP e il voto al campo verranno chiusi e l\'MVP calcolato. Continuare?', okText: 'Archivia' });
   if (ok) archiveMatch(id);
