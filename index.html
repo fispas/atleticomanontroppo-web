@@ -157,6 +157,72 @@ p { margin: 0; }
 .hero .steps li.done { color: rgba(255, 246, 227, .92); }
 .hero .steps li.now { color: var(--oro); }
 
+/* ---------- Carta giocatore ---------- */
+.carta {
+  --c1: #F7E9A8; --c2: #D1AD5E; --c3: #A67C24;
+  width: 100%; max-width: 300px; margin: 0 auto;
+  padding: 1rem 1rem 2.6rem; color: #2B2008; text-align: center;
+  background: linear-gradient(158deg, var(--c1) 0%, var(--c2) 46%, var(--c3) 100%);
+  border-radius: 18px 18px 8px 8px;
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  box-shadow: 0 8px 22px rgba(20, 37, 65, .28);
+}
+.carta.oro { --c1: #F9EDB4; --c2: #D9B562; --c3: #A67C24; }
+.carta.argento { --c1: #F2F5F8; --c2: #BFC9D4; --c3: #8894A2; color: #1F2A38; }
+.carta.bronzo { --c1: #F0D3B4; --c2: #C08347; --c3: #7E4A1E; color: #2E1A08; }
+.carta-top { display: flex; align-items: flex-start; gap: .5rem; min-height: 96px; }
+.carta-id { display: flex; flex-direction: column; align-items: center; gap: .1rem; line-height: 1; }
+.carta-id .ov { font-family: var(--font-display); font-size: 2.5rem; font-weight: 700; }
+.carta-id .ov.nuovo { font-size: 1.15rem; letter-spacing: .06em; padding: .55rem 0; }
+.carta-id .ru { font-family: var(--font-display); font-weight: 600; font-size: .95rem; letter-spacing: .04em; }
+.carta-id .crest-mini { width: 26px; height: 26px; margin-top: .35rem; object-fit: contain; }
+.carta-foto { flex: 1; display: flex; align-items: flex-end; justify-content: center; min-width: 0; }
+.carta-foto img { width: 104px; height: 104px; object-fit: cover; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .55); }
+.carta-foto .emoji {
+  width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; font-size: 2.6rem;
+  background: color-mix(in srgb, var(--c) 30%, #fff); border: 2px solid rgba(255, 255, 255, .5);
+}
+.carta-nome {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; letter-spacing: .03em;
+  padding: .3rem 0 .35rem; margin: .4rem 0 .5rem;
+  border-top: 1px solid rgba(43, 32, 8, .3); border-bottom: 1px solid rgba(43, 32, 8, .3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.carta-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: .3rem .5rem; }
+.carta-stats .cs { display: flex; align-items: baseline; justify-content: center; gap: .25rem; }
+.carta-stats .n { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
+.carta-stats .k { font-size: .7rem; font-weight: 600; opacity: .85; }
+.carta-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; gap: .1rem; }
+.carta-nota { font-size: .72rem; color: var(--ink-soft); }
+
+/* ---------- Medagliere ---------- */
+.medagliere { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: center; }
+.medaglia {
+  display: inline-flex; align-items: center; gap: .3rem;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 999px;
+  padding: .2rem .55rem .2rem .35rem; font-size: .74rem;
+}
+.medaglia .em { font-size: 1rem; }
+.medaglia .tx em { font-style: normal; opacity: .7; }
+.medaglia .volte { font-weight: 700; }
+
+/* ---------- Pagelle ---------- */
+.pagella {
+  font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums;
+  background: var(--surface-2); border-radius: 8px; padding: .1rem .45rem;
+}
+.pagella.top { background: color-mix(in srgb, var(--ok) 22%, var(--surface)); color: var(--ok); }
+.pagella.giu { background: color-mix(in srgb, var(--rosso) 18%, var(--surface)); color: var(--rosso); }
+.rate-row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .5rem; padding: .45rem 0; border-bottom: 1px solid var(--line); }
+.rate-row input[type=range] { flex: 1 0 100%; accent-color: var(--azzurro); }
+.rate-val {
+  font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums;
+  min-width: 2.3rem; text-align: center; color: var(--ink-soft);
+}
+.rate-val.on { color: var(--ink); }
+.avatar.foto { overflow: hidden; padding: 0; }
+.avatar.foto img { width: 100%; height: 100%; object-fit: cover; }
+
 main#view {
   max-width: 640px; margin: 0 auto;
   padding: 1rem 1rem calc(var(--tabbar-h) + var(--safe-b) + 1.5rem);
@@ -790,6 +856,8 @@ const BADGES = [
   { id: 'altruista', nome: 'Altruista', emoji: '🤲', desc: 'Più assist che gol dopo almeno 10 partite', metric: 'altruista', soglie: [1], ironico: true },
   { id: 'capocannoniere', nome: "Capocannoniere dell'anno", emoji: '👟', desc: 'Miglior marcatore di un anno concluso', tipo: 'annuale', award: 'capocannoniere' },
   { id: 'primo_mvp', nome: 'Primo MVP', emoji: '⭐', desc: 'Votato migliore in campo', metric: 'mvp', soglie: [1] },
+  { id: 'fenomeno', nome: 'Fenomeno', emoji: '🤩', desc: 'Media voto 8 o più in una partita', metric: 'partiteVoto8', soglie: [1, 3, 10] },
+  { id: 'top_player', nome: 'Top player', emoji: '🏅', desc: 'Media voto almeno 7,5 dopo 10 partite votate', metric: 'topPlayer', soglie: [1] },
   { id: 'mvp_seriale', nome: 'MVP seriale', emoji: '🌟', desc: 'Volte MVP', metric: 'mvp', soglie: [3, 5, 10] },
   { id: 'bis_mvp', nome: 'Bis', emoji: '🔁', desc: 'MVP in due partite consecutive giocate', metric: 'mvpConsecutiviMax', soglie: [2] },
   { id: 'serie_vincente', nome: 'Serie vincente', emoji: '📈', desc: 'Vittorie consecutive', metric: 'vittorieMax', soglie: [3, 5, 7] },
@@ -812,6 +880,7 @@ const BADGES = [
   { id: 'pareggite', nome: 'Pareggite', emoji: '🤷', desc: '3 pareggi consecutivi', metric: 'pareggiMax', soglie: [3], ironico: true },
   { id: 'panchinaro', nome: 'Panchinaro', emoji: '🪑', desc: 'Rimasto in lista d\'attesa senza giocare 3 volte', metric: 'restatoInAttesaVolte', soglie: [3], ironico: true },
   { id: 'last_minute', nome: 'Last minute', emoji: '⏰', desc: 'Iscritto nelle ultime 2 ore prima della chiusura 5 volte', metric: 'lastMinuteVolte', soglie: [5], ironico: true },
+  { id: 'serata_no', nome: 'Serata no', emoji: '🫠', desc: 'Media voto sotto 5 in una partita', metric: 'partiteVoto5', soglie: [1], ironico: true },
   { id: 'mai_contento', nome: 'Mai contento', emoji: '😤', desc: 'Media voti dati ai campi ≤ 2 con almeno 5 recensioni', metric: 'maiContento', soglie: [1], ironico: true }
 ];
 
@@ -827,7 +896,7 @@ function badgeLevelName(badge, livello) {
 function _emptyCounters() {
   return {
     presenze: 0, gol: 0, mediaGol: 0, vittorie: 0, pareggi: 0, sconfitte: 0, percVittorie: 0, mvp: 0,
-    assist: 0, partite3assist: 0, pali: 0, ritiriLastMinute: 0, assenze: 0, palloneVolte: 0, pettorineVolte: 0,
+    assist: 0, partite3assist: 0, pali: 0, partiteVotate: 0, sommaMedie: 0, mediaVoto: 0, partiteVoto8: 0, partiteVoto5: 0, ritiriLastMinute: 0, assenze: 0, palloneVolte: 0, pettorineVolte: 0,
     ospitiPortati: 0, primoIscrittoVolte: 0, entratoDaAttesaVolte: 0, restatoInAttesaVolte: 0,
     forseVolte: 0, recensioniCampo: 0, campiDiversi: 0, supereroe: 0, lastMinuteVolte: 0,
     partite2gol: 0, partite3gol: 0, partite4gol: 0, rimonte: 0
@@ -836,6 +905,8 @@ function _emptyCounters() {
 
 function _finalizeCounters(c, campiSet) {
   c.mediaGol = c.presenze ? Math.round((c.gol / c.presenze) * 100) / 100 : 0;
+  c.mediaAssist = c.presenze ? Math.round((c.assist / c.presenze) * 100) / 100 : 0;
+  c.mediaVoto = c.partiteVotate ? Math.round((c.sommaMedie / c.partiteVotate) * 100) / 100 : 0;
   c.percVittorie = c.presenze ? Math.round((c.vittorie / c.presenze) * 1000) / 10 : 0;
   if (campiSet) c.campiDiversi = campiSet.size;
   return c;
@@ -888,7 +959,7 @@ function computeAllStats(input) {
         serie: { presenzeConsecutiveAttuale: 0, presenzeConsecutiveMax: 0, vittorieAttuale: 0, vittorieMax: 0,
           sconfitteAttuale: 0, sconfitteMax: 0, pareggiAttuale: 0, pareggiMax: 0, senzaGolAttuale: 0, senzaGolMax: 0,
           senzaRitiriAttuale: 0, senzaRitiriMax: 0, mvpConsecutiviAttuale: 0, mvpConsecutiviMax: 0 },
-        record: { maxGolPartita: { gol: 0, data: null, matchId: null }, maxGolAnno: { gol: 0, anno: null } },
+        record: { maxGolPartita: { gol: 0, data: null, matchId: null }, maxGolAnno: { gol: 0, anno: null }, maxVotoPartita: { voto: 0, data: null, matchId: null } },
         formaAll: [], compagni: {}, avversari: {}, perCampo: {}, votiDati: [],
         ultimoPallone: null, ultimePettorine: null, lastOwn: null,
         badgeLevels: {}, badge: []
@@ -925,6 +996,8 @@ function computeAllStats(input) {
       sconfitteMax: s.serie.sconfitteMax, pareggiMax: s.serie.pareggiMax, senzaGolMax: s.serie.senzaGolMax,
       senzaRitiriMax: s.serie.senzaRitiriMax, mvpConsecutiviMax: s.serie.mvpConsecutiviMax,
       partite2gol: t.partite2gol, partite3gol: t.partite3gol, partite4gol: t.partite4gol, rimonte: t.rimonte, partite3assist: t.partite3assist,
+      partiteVoto8: t.partiteVoto8, partiteVoto5: t.partiteVoto5,
+      topPlayer: t.partiteVotate >= 10 && (t.sommaMedie / t.partiteVotate) >= 7.5 ? 1 : 0,
       supereroe: t.supereroe, primoIscrittoVolte: t.primoIscrittoVolte, magazzino: t.palloneVolte + t.pettorineVolte,
       ospitiPortati: t.ospitiPortati, campiDiversi: s.campi.size, recensioniCampo: t.recensioniCampo,
       forseAnnoMax: annoMax('forseVolte'), ritiriAnnoMax: annoMax('ritiriLastMinute'), assenzeAnnoMax: annoMax('assenze'),
@@ -962,6 +1035,11 @@ function computeAllStats(input) {
     const gol = golByPlayerOfMatch(m);
     const assist = {}; for (const x of m.assist || []) assist[x.playerId] = (assist[x.playerId] || 0) + (Number(x.n) || 0);
     const pali = {}; for (const x of m.pali || []) pali[x.playerId] = (pali[x.playerId] || 0) + (Number(x.n) || 0);
+    const pagelle = {};
+    for (const x of m.pagelle || []) {
+      const media = Number(x?.media);
+      if (x?.playerId && isFinite(media) && media > 0) pagelle[x.playerId] = Math.min(10, Math.max(1, media));
+    }
     const mvpSet = new Set(m.stato === 'archiviata' ? (m.mvp || []) : []);
     const presences = input.presencesByMatch?.[m.id] || {};
     const reviews = input.reviewsByMatch?.[m.id] || {};
@@ -1018,6 +1096,14 @@ function computeAllStats(input) {
       if (mvpSet.has(pid)) inc(pid, anno, 'mvp');
       if (assist[pid]) inc(pid, anno, 'assist', assist[pid]);
       if ((assist[pid] || 0) >= 3) inc(pid, anno, 'partite3assist');
+      const voto = pagelle[pid];
+      if (voto) {
+        inc(pid, anno, 'partiteVotate');
+        inc(pid, anno, 'sommaMedie', voto);
+        if (voto >= 8) inc(pid, anno, 'partiteVoto8');
+        if (voto < 5) inc(pid, anno, 'partiteVoto5');
+        if (voto > s.record.maxVotoPartita.voto) s.record.maxVotoPartita = { voto, data: m.data, matchId: m.id };
+      }
       if (pali[pid]) inc(pid, anno, 'pali', pali[pid]);
       if (g >= 2) inc(pid, anno, 'partite2gol');
       if (g >= 3) inc(pid, anno, 'partite3gol');
@@ -1099,6 +1185,7 @@ function computeAllStats(input) {
     yearAwards[anno] = {
       anno, concluso,
       capocannoniere: topOf(anno, 'gol'),
+      pallaDoro: topOf(anno, 'mediaVoto', c => c.partiteVotate >= 3),
       reAssist: topOf(anno, 'assist'),
       mvpAnno: topOf(anno, 'mvp'),
       piuPresenze: topOf(anno, 'presenze'),
@@ -1114,6 +1201,30 @@ function computeAllStats(input) {
         else s.badge.push({ id: badgeId, livello: 1, sbloccatoIl: `${anno}-12-31`, matchId: null, volte: 1, anni: [anno] });
       }
     }
+  }
+
+  // Carta giocatore: valori 0-99 rapportati al gruppo
+  for (const pid of playerIds) { const s = ensure(pid); _finalizeCounters(s.totali, s.campi); }
+  const attivi = playerIds.filter(pid => S[pid] && S[pid].totali.presenze > 0);
+  const maxDi = fn => Math.max(0, ...attivi.map(pid => fn(S[pid].totali)));
+  const maxMediaGol = maxDi(c => c.mediaGol);
+  const maxMediaAssist = maxDi(c => c.mediaAssist);
+  const maxMvpRatio = maxDi(c => (c.presenze ? c.mvp / c.presenze : 0));
+  const cap99 = v => Math.max(30, Math.min(99, Math.round(v)));
+  const rapporta = (v, max) => (!max || v <= 0) ? 40 : cap99(45 + 54 * (v / max));
+
+  function cartaDi(t) {
+    const voci = [
+      { key: 'VOT', nome: 'Media voto', valore: t.partiteVotate ? cap99(t.mediaVoto * 10) : 60, peso: 0.30 },
+      { key: 'GOL', nome: 'Gol', valore: rapporta(t.mediaGol, maxMediaGol), peso: 0.15 },
+      { key: 'ASS', nome: 'Assist', valore: rapporta(t.mediaAssist, maxMediaAssist), peso: 0.15 },
+      { key: 'MVP', nome: 'MVP', valore: rapporta(t.presenze ? t.mvp / t.presenze : 0, maxMvpRatio), peso: 0.15 },
+      { key: 'VIT', nome: 'Vittorie', valore: cap99(t.percVittorie), peso: 0.10 },
+      { key: 'PRE', nome: 'Presenza', valore: cap99(affidabilita(t)), peso: 0.15 }
+    ];
+    if (t.presenze < 3) return { overall: null, rarita: 'bronzo', partiteMancanti: 3 - t.presenze, voci };
+    const overall = Math.round(voci.reduce((s, v) => s + v.valore * v.peso, 0));
+    return { overall, rarita: overall >= 85 ? 'oro' : overall >= 70 ? 'argento' : 'bronzo', partiteMancanti: 0, voci };
   }
 
   // Output giocatori
@@ -1136,6 +1247,7 @@ function computeAllStats(input) {
     const prefer = perCampo.filter(pc => pc.presenze >= 3).sort((a, b) => b.percVittorie - a.percVittorie || b.presenze - a.presenze)[0];
     const serie = { ...s.serie };
     playerStats[pid] = {
+      carta: cartaDi(t),
       totali: t,
       perAnno: s.perAnno,
       serie,
@@ -1195,6 +1307,7 @@ const CLASSIFICHE = [
   { id: 'mediaGol', nome: 'Media gol', value: c => c.mediaGol, min: 5, fmt: v => v.toFixed(2).replace('.', ',') },
   { id: 'percVittorie', nome: '% vittorie', value: c => c.percVittorie, min: 5, fmt: v => `${String(v).replace('.', ',')}%` },
   { id: 'mvp', nome: 'MVP', value: c => c.mvp, fmt: v => String(v) },
+  { id: 'mediaVoto', nome: 'Media voto', value: c => c.mediaVoto, min: 3, fmt: v => v.toFixed(2).replace('.', ',') },
   { id: 'affidabilita', nome: 'Affidabilità', value: c => affidabilita(c), min: 5, fmt: v => `${Math.round(v)}%` },
   { id: 'magazziniere', nome: 'Magazziniere', value: c => (c.palloneVolte || 0) + (c.pettorineVolte || 0), fmt: v => String(v) }
 ];
@@ -1310,6 +1423,8 @@ const S = {
   requests: [],
   myVotes: {},
   myReviews: {},
+  myRatings: {},
+  photos: {},
   route: { name: 'partita', id: null, sub: null },
   weather: {},
   creatingMatch: {},
@@ -1395,7 +1510,19 @@ function guestName(key) {
 function avatarHtml(id, size = '') {
   if (String(id).startsWith('ospite:')) return `<span class="avatar guest ${size}" aria-hidden="true">+1</span>`;
   const p = S.players[id] || {};
+  const foto = S.photos[id];
+  if (foto) return `<span class="avatar foto ${size}" style="--c:${esc(p.colore || '#5B6B82')}"><img src="${esc(foto)}" alt=""></span>`;
   return `<span class="avatar ${size}" style="--c:${esc(p.colore || '#5B6B82')}" aria-hidden="true">${esc(p.avatar || '⚽')}</span>`;
+}
+
+const fotoInCorso = {};
+function ensurePhoto(pid) {
+  if (!pid || pid in S.photos || fotoInCorso[pid]) return;
+  fotoInCorso[pid] = true;
+  getDoc(doc(db, 'playerPhotos', pid))
+    .then(snap => { S.photos[pid] = snap.exists() ? (snap.data().dataUrl || null) : null; render(); })
+    .catch(() => { S.photos[pid] = null; })
+    .finally(() => { delete fotoInCorso[pid]; });
 }
 
 function starsHtml(v, max = 5) {
@@ -1663,7 +1790,7 @@ function teardown() {
   Object.assign(S, {
     isAdmin: false, account: null, myPlayerId: null, players: {}, playersLoaded: false, fields: {}, playerStats: {}, statsLoaded: false,
     fieldStats: {}, yearAwards: {}, matches: [], matchesLoaded: false, currentId: null, presences: {}, presencesLoaded: false,
-    currentLogs: [], levels: {}, requests: [], myVotes: {}, myReviews: {}, configExists: null, config: { ...DEFAULT_CONFIG }
+    currentLogs: [], levels: {}, requests: [], myVotes: {}, myReviews: {}, myRatings: {}, photos: {}, configExists: null, config: { ...DEFAULT_CONFIG }
   });
 }
 
@@ -1930,7 +2057,8 @@ function updatePostMatchSubscriptions() {
     if (postUnsubs[m.id]) continue;
     postUnsubs[m.id] = [
       onSnapshot(doc(db, 'matches', m.id, 'mvpVotes', S.myPlayerId), snap => { S.myVotes[m.id] = snap.exists() ? snap.data() : null; render(); }, () => {}),
-      onSnapshot(doc(db, 'matches', m.id, 'fieldReviews', S.myPlayerId), snap => { S.myReviews[m.id] = snap.exists() ? snap.data() : null; render(); }, () => {})
+      onSnapshot(doc(db, 'matches', m.id, 'fieldReviews', S.myPlayerId), snap => { S.myReviews[m.id] = snap.exists() ? snap.data() : null; render(); }, () => {}),
+      onSnapshot(doc(db, 'matches', m.id, 'ratings', S.myPlayerId), snap => { S.myRatings[m.id] = snap.exists() ? snap.data() : null; render(); }, () => {})
     ];
   }
 }
@@ -2387,7 +2515,7 @@ function renderPostMatch(m) {
   const left = relCountdown(ms(m.postPartitaFino));
   const f = matchField(m);
   const marcatori = (m.marcatori || []).filter(x => x.gol > 0).sort((a, b) => b.gol - a.gol);
-  const others = (m.giocatori || []).filter(id => id !== S.myPlayerId);
+  const others = (m.giocatori || []).filter(id => id !== S.myPlayerId && S.players[id]);
   return `
     <section class="card stack" aria-label="Post-partita">
       <div class="row between"><h2>Com'è andata</h2><span class="muted small">${esc(formatDataBreve(m.data))}</span></div>
@@ -2404,6 +2532,19 @@ function renderPostMatch(m) {
           ${vote ? `<p>Hai votato <strong>${esc(playerName(vote.votatoPer))}</strong>. Il risultato arriva a votazione chiusa.</p>` : `
             <p class="small muted">Chi è stato il migliore in campo? Il voto è segreto e non si può cambiare.</p>
             <div class="row wrap" style="gap:.4rem">${others.map(id => `<button class="chip row" style="gap:.35rem" data-act="voteMvp" data-match="${esc(m.id)}" data-id="${esc(id)}">${avatarHtml(id, 'sm')}${esc(playerName(id))}</button>`).join('')}</div>`}
+        </div>
+        <div class="stack tight">
+          <h3>Pagelle</h3>
+          ${(() => {
+            const r = S.myRatings[m.id];
+            const dati = (r && r.voti) || {};
+            const fatti = others.filter(id => dati[id] > 0).length;
+            if (!others.length) return '<p class="small muted">Non c\'è nessun altro da votare.</p>';
+            return `<div class="row between">
+              <span class="small">${fatti ? `Hai votato ${fatti} giocatori su ${others.length}.` : 'Dai un voto da 1 a 10 a ogni compagno e avversario.'}</span>
+              <button class="btn small ${fatti ? '' : 'primary'}" data-act="ratePlayers" data-match="${esc(m.id)}">${fatti ? 'Modifica voti' : 'Vota'}</button>
+            </div>`;
+          })()}
         </div>
         <div class="stack tight">
           <h3>Il campo</h3>
@@ -2590,6 +2731,58 @@ ACTIONS.voteMvp = async el => {
   }), 'Voto registrato');
 };
 
+ACTIONS.ratePlayers = async el => {
+  const matchId = el.dataset.match;
+  const m = S.matches.find(x => x.id === matchId);
+  if (!m || !isPostOpen(m)) { toast('Le pagelle sono chiuse.', 'err'); return; }
+  const altri = (m.giocatori || []).filter(id => id !== S.myPlayerId && S.players[id]);
+  if (!altri.length) return;
+  const voti = { ...((S.myRatings[matchId] || {}).voti || {}) };
+  const riga = pid => {
+    const v = voti[pid];
+    return `<div class="rate-row" data-rate-row="${esc(pid)}">
+      <span class="row grow" style="min-width:0">${avatarHtml(pid, 'sm')}<span class="ellipsis">${esc(playerName(pid))}</span></span>
+      <span class="rate-val ${v ? 'on' : ''}">${v ? fmtNum(v, 1) : '–'}</span>
+      <input type="range" min="1" max="10" step="0.5" value="${v || 6}" data-rate="${esc(pid)}" aria-label="Voto per ${esc(playerName(pid))}">
+      ${v ? `<button type="button" class="btn small ghost" data-clear-rate="${esc(pid)}" aria-label="Togli il voto">✕</button>` : ''}
+    </div>`;
+  };
+  const body = () => `<div class="stack tight">
+    <p class="small muted">Trascina per dare il voto, da 1 a 10. I voti restano segreti: a fine votazione si vede solo la media.</p>
+    ${altri.map(riga).join('')}
+  </div>`;
+  openSheet({
+    title: 'Pagelle',
+    body: body(),
+    foot: `<button class="btn" data-close>Annulla</button><button class="btn primary" data-save-rate>Salva voti</button>`,
+    onMount(sheet, api) {
+      sheet.addEventListener('input', ev => {
+        const sl = ev.target.closest('[data-rate]');
+        if (!sl) return;
+        const pid = sl.dataset.rate;
+        voti[pid] = Number(sl.value);
+        const row = [...sheet.querySelectorAll('[data-rate-row]')].find(x => x.dataset.rateRow === pid)?.querySelector('.rate-val');
+        if (row) { row.textContent = fmtNum(voti[pid], 1); row.classList.add('on'); }
+      });
+      sheet.addEventListener('click', async ev => {
+        const cl = ev.target.closest('[data-clear-rate]');
+        if (cl) { delete voti[cl.dataset.clearRate]; api.setBody(body()); return; }
+        if (!ev.target.closest('[data-save-rate]')) return;
+        const puliti = {};
+        for (const [pid, v] of Object.entries(voti)) {
+          const n = Number(v);
+          if (altri.includes(pid) && isFinite(n) && n >= 1 && n <= 10) puliti[pid] = Math.round(n * 2) / 2;
+        }
+        if (!Object.keys(puliti).length) { toast('Dai almeno un voto', 'err'); return; }
+        api.close();
+        await guard(() => setDoc(doc(db, 'matches', matchId, 'ratings', S.myPlayerId), {
+          voti: puliti, uid: S.user.uid, aggiornatoIl: serverTimestamp()
+        }), 'Voti salvati');
+      });
+    }
+  });
+};
+
 function starInput(name, value, small = false) {
   return `<div class="star-input ${small ? 'small' : ''}" data-stars="${name}" role="radiogroup">
     <input type="hidden" name="${name}" value="${value || ''}">
@@ -2764,6 +2957,7 @@ function renderAlboDoro() {
       <div class="row between"><h3>${y.anno}</h3>${y.concluso ? '<span class="pill warn">🏆 Concluso</span>' : '<span class="pill info">In corso</span>'}</div>
       ${awardLine('Capocannoniere', y.capocannoniere, v => `${v} gol`)}
       ${(y.reAssist || []).length ? awardLine('Re degli assist', y.reAssist, v => `${v} assist`) : ''}
+      ${(y.pallaDoro || []).length ? awardLine('Pallone d\'oro', y.pallaDoro, v => `media ${fmtNum(v, 2)}`) : ''}
       ${awardLine('MVP', y.mvpAnno, v => `${v}×`)}
       ${awardLine('Più presenze', y.piuPresenze)}
       ${awardLine('Più vittorie', y.piuVittorie)}
@@ -2863,6 +3057,10 @@ function renderPartitaDettaglio(id) {
       ${teamsHtml(m, { clickable: true })}
       ${(m.assenti || []).length ? `<p class="small muted">Assenti: ${m.assenti.map(p => esc(playerName(p))).join(', ')}</p>` : ''}
     </section>` : ''}
+    ${(m.pagelle || []).length ? `<section class="card stack tight"><h2>Pagelle</h2>
+      ${m.pagelle.map(x => `<div class="row between small"><span class="row">${avatarHtml(x.playerId, 'sm')} ${esc(playerName(x.playerId))}</span><span class="pagella ${x.media >= 8 ? 'top' : x.media < 5 ? 'giu' : ''}">${esc(fmtNum(x.media, 2))}</span></div>`).join('')}
+      <p class="tiny muted">Media dei voti dei partecipanti.</p>
+    </section>` : m.stato === 'giocata' ? '<section class="card stack tight"><h2>Pagelle</h2><p class="small muted">Votazione in corso: le medie compaiono all\'archiviazione.</p></section>' : ''}
     ${d.votes.length && (m.stato === 'archiviata' || S.isAdmin) ? `<section class="card stack tight"><h2>Voti MVP</h2>
       ${Object.entries(voteCount).sort((a, b) => b[1] - a[1]).map(([pid, n]) => `<div class="row between small"><span class="row">${avatarHtml(pid, 'sm')} ${esc(playerName(pid))}</span><span class="num">${n}</span></div>`).join('')}
     </section>` : ''}
@@ -3043,6 +3241,57 @@ function golBarsSvg(forma) {
   </svg>`;
 }
 
+const RUOLO_SIGLA = { portiere: 'POR', difensore: 'DIF', centrocampista: 'CEN', attaccante: 'ATT', jolly: 'JOL' };
+
+function renderCarta(pid) {
+  const p = S.players[pid] || {};
+  const st = S.playerStats[pid];
+  const carta = st?.carta;
+  const t = st?.totali;
+  ensurePhoto(pid);
+  const foto = S.photos[pid];
+  const rarita = carta?.rarita || 'bronzo';
+  const nome = (p.soprannome || p.nome || '').toUpperCase();
+  const voci = carta?.voci || [];
+  const overall = carta?.overall;
+  const nota = overall == null
+    ? `Ancora ${carta?.partiteMancanti || 3} partite e la carta è completa`
+    : t ? `${t.presenze} partite · ${t.gol} gol · ${t.assist || 0} assist` : '';
+  return `
+    <div class="carta-wrap">
+    <div class="carta ${esc(rarita)}">
+      <div class="carta-top">
+        <div class="carta-id">
+          <span class="ov ${overall == null ? 'nuovo' : ''}">${overall != null ? overall : 'NEW'}</span>
+          <span class="ru">${esc(RUOLO_SIGLA[p.ruolo] || 'GIO')}</span>
+          <img class="crest-mini" src="assets/icon-192.png" alt="">
+        </div>
+        <div class="carta-foto">
+          ${foto ? `<img src="${esc(foto)}" alt="">` : `<span class="emoji" style="--c:${esc(p.colore || '#5B6B82')}">${esc(p.avatar || '⚽')}</span>`}
+        </div>
+      </div>
+      <div class="carta-nome">${esc(nome || '—')}</div>
+      <div class="carta-stats">
+        ${voci.map(v => `<div class="cs"><span class="n">${v.valore}</span><span class="k">${esc(v.key)}</span></div>`).join('')}
+      </div>
+    </div>
+    ${nota ? `<p class="carta-nota">${esc(nota)}</p>` : ''}
+    </div>`;
+}
+
+function renderMedagliere(pid) {
+  const st = S.playerStats[pid];
+  const badge = (st?.badge || []).filter(b => BADGE_BY_ID[b.id]).slice(0, 8);
+  if (!badge.length) return '';
+  return `<div class="medagliere">${badge.map(b => {
+    const def = BADGE_BY_ID[b.id];
+    const liv = badgeLevelName(def, b.livello);
+    return `<span class="medaglia" title="${esc(def.nome)}${liv ? ' ' + esc(liv) : ''}">
+      <span class="em">${def.emoji}</span><span class="tx">${esc(def.nome)}${liv ? ` <em>${esc(liv)}</em>` : ''}</span>
+      ${b.volte > 1 ? `<span class="volte">×${b.volte}</span>` : ''}</span>`;
+  }).join('')}</div>`;
+}
+
 function renderProfilo(pid) {
   if (!pid) {
     return `<div class="card stack"><h2>Nessun profilo</h2><p>Sei admin senza profilo giocatore.</p>
@@ -3077,13 +3326,13 @@ function renderProfilo(pid) {
   return `
     ${!mine ? '<button class="btn ghost small" data-act="back" style="align-self:flex-start">‹ Indietro</button>' : ''}
     <section class="card stack" style="align-items:center;text-align:center">
-      ${avatarHtml(pid, 'lg')}
+      ${renderCarta(pid)}
       <div class="stack tight"><h1>${esc(p.nome)}</h1>
-        ${p.soprannome ? `<p class="muted">"${esc(p.soprannome)}"</p>` : ''}
         <p class="small muted">${esc([RUOLI[p.ruolo], p.piede ? `piede ${PIEDI[p.piede]?.toLowerCase()}` : ''].filter(Boolean).join(' · '))}</p>
         ${!p.attivo ? '<span class="pill bad" style="align-self:center">Non attivo</span>' : ''}
       </div>
-      ${mine ? '<div class="row wrap" style="justify-content:center"><button class="btn small" data-act="editProfile">Modifica profilo</button></div>' : ''}
+      ${renderMedagliere(pid)}
+      ${mine ? '<div class="row wrap" style="justify-content:center"><button class="btn small" data-act="editProfile">Modifica profilo</button><button class="btn small" data-act="changePhoto">Cambia foto</button></div>' : ''}
     </section>
 
     <div class="chips" role="group" aria-label="Periodo">
@@ -3099,6 +3348,7 @@ function renderProfilo(pid) {
         <div class="kpi"><div class="v">${c.vittorie}-${c.pareggi}-${c.sconfitte}</div><div class="l">V-P-S</div></div>
         <div class="kpi"><div class="v">${fmtNum(c.percVittorie)}%</div><div class="l">vittorie</div></div>
         <div class="kpi"><div class="v">${c.mvp}</div><div class="l">MVP</div></div>
+        <div class="kpi"><div class="v">${c.mediaVoto ? esc(fmtNum(c.mediaVoto, 2)) : '–'}</div><div class="l">media voto</div></div>
       </div>
       ${!st ? '<p class="small muted center">Le statistiche compaiono dopo la prima partita chiusa.</p>' : ''}
     </section>
@@ -3112,6 +3362,7 @@ function renderProfilo(pid) {
     ${st ? `<section class="card stack tight">
       <h2>Record e serie</h2>
       <div class="row between small"><span class="muted">Più gol in una partita</span><span>${st.record?.maxGolPartita?.gol || 0}${st.record?.maxGolPartita?.data ? ` <span class="muted">(${esc(formatDataBreve(st.record.maxGolPartita.data))})</span>` : ''}</span></div>
+      ${st?.record?.maxVotoPartita?.voto ? `<div class="row between small"><span class="muted">Voto più alto</span><span>${esc(fmtNum(st.record.maxVotoPartita.voto, 2))}${st.record.maxVotoPartita.data ? ` <span class="muted">(${esc(formatDataBreve(st.record.maxVotoPartita.data))})</span>` : ''}</span></div>` : ''}
       <div class="row between small"><span class="muted">Più gol in un anno</span><span>${st.record?.maxGolAnno?.gol || 0}${st.record?.maxGolAnno?.anno ? ` <span class="muted">(${st.record.maxGolAnno.anno})</span>` : ''}</span></div>
       <div class="row between small"><span class="muted">Vittorie consecutive</span><span>${st.serie?.vittorieAttuale || 0} ora · record ${st.serie?.vittorieMax || 0}</span></div>
       <div class="row between small"><span class="muted">Presenze consecutive</span><span>${st.serie?.presenzeConsecutiveAttuale || 0} ora · record ${st.serie?.presenzeConsecutiveMax || 0}</span></div>
@@ -3170,6 +3421,7 @@ function renderH2H(p1, p2, periodo) {
       ${row('media gol', c1.mediaGol, c2.mediaGol, v => fmtNum(v, 2))}
       ${row('% vittorie', c1.percVittorie, c2.percVittorie, v => `${fmtNum(v)}%`)}
       ${row('MVP', c1.mvp, c2.mvp)}
+      ${row('media voto', c1.mediaVoto, c2.mediaVoto, v => v ? fmtNum(v, 2) : '–')}
     </div>
     <div class="card flat stack tight">
       <p class="small">Insieme: <strong>${h.insieme}</strong> partite, <strong>${h.vittorieInsieme}</strong> vinte</p>
@@ -3184,6 +3436,57 @@ document.addEventListener('change', e => {
 });
 
 ACTIONS.setProfiloPeriodo = el => { UI.profiloPeriodo = el.dataset.v; render(); };
+
+async function ridimensionaFoto(file, lato = 512, qualita = 0.78) {
+  const bitmap = await createImageBitmap(file);
+  const min = Math.min(bitmap.width, bitmap.height);
+  const canvas = document.createElement('canvas');
+  canvas.width = lato; canvas.height = lato;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(bitmap, (bitmap.width - min) / 2, (bitmap.height - min) / 2, min, min, 0, 0, lato, lato);
+  bitmap.close?.();
+  let url = canvas.toDataURL('image/jpeg', qualita);
+  for (let q = qualita; url.length > 360000 && q > 0.35; q -= 0.12) url = canvas.toDataURL('image/jpeg', q);
+  return url;
+}
+
+ACTIONS.changePhoto = () => {
+  const pid = S.myPlayerId;
+  if (!pid) return;
+  const attuale = S.photos[pid];
+  const api = openSheet({
+    title: 'Foto profilo',
+    body: `<div class="stack">
+      <div class="carta-foto" style="justify-content:center">${attuale ? `<img src="${esc(attuale)}" alt="">` : `<span class="emoji" style="--c:${esc(S.players[pid]?.colore || '#5B6B82')}">${esc(S.players[pid]?.avatar || '⚽')}</span>`}</div>
+      <label class="btn primary block" style="cursor:pointer">Scegli una foto
+        <input type="file" accept="image/*" id="foto-input" hidden></label>
+      <p class="small muted">Viene ritagliata quadrata e rimpicciolita sul telefono: al gruppo arrivano circa 100 KB. Senza foto resta l'avatar.</p>
+      ${attuale ? '<button class="btn danger block" data-remove-photo>Togli la foto</button>' : ''}
+    </div>`,
+    onMount(sheet, a2) {
+      sheet.querySelector('#foto-input').addEventListener('change', async ev => {
+        const file = ev.target.files?.[0];
+        if (!file) return;
+        if (!/^image\//.test(file.type)) { toast('Serve un\'immagine', 'err'); return; }
+        let dataUrl;
+        try { dataUrl = await ridimensionaFoto(file); }
+        catch (e) { console.error(e); toast('Immagine non leggibile', 'err'); return; }
+        a2.close();
+        const ok = await guard(() => setDoc(doc(db, 'playerPhotos', pid), {
+          dataUrl, uid: S.user.uid, aggiornatoIl: serverTimestamp()
+        }), 'Foto aggiornata');
+        if (ok !== undefined) { S.photos[pid] = dataUrl; render(); }
+      });
+      sheet.addEventListener('click', async ev => {
+        if (!ev.target.closest('[data-remove-photo]')) return;
+        a2.close();
+        const ok = await guard(() => deleteDoc(doc(db, 'playerPhotos', pid)), 'Foto rimossa');
+        if (ok !== undefined) { S.photos[pid] = null; render(); }
+      });
+    }
+  });
+  return api;
+};
 
 ACTIONS.editProfile = () => {
   const p = S.players[S.myPlayerId];
@@ -3846,8 +4149,23 @@ async function archiveMatch(id, { silent = false } = {}) {
     const snap = await getDocs(collection(db, 'matches', id, 'mvpVotes'));
     snap.forEach(d => votes.push(d.data()));
     const mvp = computeMvp(votes, m);
+    const somme = {};
+    const rsnap = await getDocs(collection(db, 'matches', id, 'ratings'));
+    rsnap.forEach(d => {
+      const voti = d.data()?.voti || {};
+      for (const [pid, v] of Object.entries(voti)) {
+        const n = Number(v);
+        if (pid === d.id || !isFinite(n) || n < 1 || n > 10) continue;
+        if (!(m.giocatori || []).includes(pid)) continue;
+        const acc = somme[pid] = somme[pid] || { somma: 0, voti: 0 };
+        acc.somma += n; acc.voti++;
+      }
+    });
+    const pagelle = Object.entries(somme)
+      .map(([playerId, a]) => ({ playerId, media: Math.round((a.somma / a.voti) * 100) / 100, voti: a.voti }))
+      .sort((a, b) => b.media - a.media);
     const batch = writeBatch(db);
-    batch.update(doc(db, 'matches', id), { stato: 'archiviata', mvp });
+    batch.update(doc(db, 'matches', id), { stato: 'archiviata', mvp, pagelle });
     addLog(batch, { matchId: id, azione: 'archiviazione', dopo: mvp.map(playerName).join(', ') || 'nessun MVP' });
     await batch.commit();
     if (!silent) toast(mvp.length ? `Archiviata. MVP: ${mvp.map(playerName).join(', ')}` : 'Archiviata, nessun voto MVP');
