@@ -176,7 +176,17 @@ p { margin: 0; }
 .carta-id .ov.nuovo { font-size: 1.15rem; letter-spacing: .06em; padding: .55rem 0; }
 .carta-id .ru { font-family: var(--font-display); font-weight: 600; font-size: .95rem; letter-spacing: .04em; }
 .carta-id .crest-mini { width: 26px; height: 26px; margin-top: .35rem; object-fit: contain; }
+.carta { position: relative; }
+.carta > * { position: relative; z-index: 1; }
+.carta::before { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .5; }
+.carta.stile-raggi::before { background: repeating-conic-gradient(from 0deg at 50% 22%, rgba(255,255,255,.55) 0deg 7deg, transparent 7deg 16deg); }
+.carta.stile-stelle::before { background: radial-gradient(circle at 18% 18%, rgba(255,255,255,.8) 0 2px, transparent 3px), radial-gradient(circle at 78% 12%, rgba(255,255,255,.8) 0 3px, transparent 4px), radial-gradient(circle at 88% 42%, rgba(255,255,255,.7) 0 2px, transparent 3px), radial-gradient(circle at 10% 52%, rgba(255,255,255,.7) 0 2px, transparent 3px), radial-gradient(circle at 60% 8%, rgba(255,255,255,.6) 0 2px, transparent 3px); }
+.carta.stile-onde::before { background: repeating-linear-gradient(135deg, rgba(255,255,255,.4) 0 6px, transparent 6px 18px); }
+.carta.stile-fiamme::before { background: radial-gradient(ellipse at 22% 88%, rgba(255,120,40,.65) 0 22%, transparent 55%), radial-gradient(ellipse at 76% 82%, rgba(255,70,90,.55) 0 20%, transparent 52%), radial-gradient(ellipse at 50% 100%, rgba(255,200,60,.6) 0 26%, transparent 60%); }
+.carta.stile-campione::before { background: conic-gradient(from 210deg at 50% 40%, rgba(255,255,255,.75), transparent 28%, rgba(255,255,255,.5) 52%, transparent 78%, rgba(255,255,255,.7)); opacity: .42; }
 .carta-foto { flex: 1; display: flex; align-items: flex-end; justify-content: center; min-width: 0; }
+.carta-foto.persona { align-items: flex-end; margin: -.55rem 0 -.5rem; }
+.carta-foto.persona svg { width: 112px; height: 112px; display: block; }
 .carta-foto img { width: 104px; height: 104px; object-fit: cover; border-radius: 50%; border: 2px solid rgba(255, 255, 255, .55); }
 .carta-foto .emoji {
   width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; font-size: 2.6rem;
@@ -565,6 +575,33 @@ textarea { min-height: 80px; resize: vertical; }
   main#view { padding-top: 1.5rem; }
   .hero .when { font-size: 2.2rem; }
 }
+
+/* ---------- Editor del personaggio ---------- */
+.av-preview { max-width: 168px; margin: 0 auto; padding: .5rem; clip-path: none; border-radius: 16px; }
+.av-preview svg { width: 100%; height: auto; display: block; }
+.av-schede { display: flex; flex-wrap: wrap; gap: .3rem; justify-content: center; }
+.av-scheda {
+  width: 46px; height: 46px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--surface); font-size: 1.3rem; cursor: pointer; line-height: 1;
+}
+.av-scheda.on { border-color: var(--accent); background: var(--surface-2); }
+.av-opzioni { display: flex; flex-wrap: wrap; gap: .4rem; }
+.av-colori { display: flex; flex-wrap: wrap; gap: .5rem; }
+.av-colore {
+  width: 46px; height: 46px; border-radius: 50%; border: 3px solid var(--line);
+  background: var(--c); cursor: pointer;
+}
+.av-colore.on { border-color: var(--accent); transform: scale(1.06); }
+.av-stili { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.av-stile {
+  min-height: 74px; border-radius: 12px; border: 2px solid transparent; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .15rem;
+  padding: .4rem .3rem; clip-path: none; max-width: none; color: #2B2008;
+}
+.av-stile .n { font-family: var(--font-display); font-weight: 700; font-size: .85rem; }
+.av-stile .r { font-size: .6rem; opacity: .9; text-align: center; line-height: 1.1; }
+.av-stile.on { border-color: var(--ink); }
+.av-stile.bloccato { filter: grayscale(.7); opacity: .6; cursor: not-allowed; }
 
 </style>
 </head>
@@ -1441,6 +1478,177 @@ function buildIcs({ uid, title, description, location, url, start, end }) {
 
 function isInAppBrowser(ua) {
   return /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Telegram|MicroMessenger|Line\/|; wv\)/i.test(String(ua || ''));
+}
+
+/* ---------- Personaggio della carta ---------- */
+
+const PELLE = ['#F8D8C0', '#EFC29E', '#DCA378', '#B97C53', '#8E5B3C', '#5F3B27'];
+const CAPELLI_COLORI = ['#241C15', '#5A3A21', '#8B5A2B', '#C08A3E', '#E6CE96', '#A7B0BA'];
+const MAGLIE = ['#BE0234', '#04B6DA', '#142541', '#F2F4F7', '#12965A', '#D1AD5E', '#7A2BB0', '#F06E1A'];
+
+const TRATTI = [
+  { id: 'corpo', nome: 'Corporatura', icona: '🧍', opzioni: ['Esile', 'Normale', 'Robusto'] },
+  { id: 'pelle', nome: 'Pelle', icona: '🎨', colori: PELLE },
+  { id: 'capelli', nome: 'Capelli', icona: '💇', opzioni: ['Rasato', 'Corto', 'Ciuffo', 'Ricci', 'Afro', 'Lungo', 'Rasta', 'Pelato'] },
+  { id: 'coloreCapelli', nome: 'Colore capelli', icona: '🖌️', colori: CAPELLI_COLORI },
+  { id: 'sopracciglia', nome: 'Sopracciglia', icona: '🤨', opzioni: ['Dritte', 'Arcuate', 'Folte'] },
+  { id: 'occhi', nome: 'Occhi', icona: '👀', opzioni: ['Normali', 'Grandi', 'Stretti', 'Furbi'] },
+  { id: 'naso', nome: 'Naso', icona: '👃', opzioni: ['Piccolo', 'Dritto', 'Pronunciato'] },
+  { id: 'bocca', nome: 'Bocca', icona: '👄', opzioni: ['Sorriso', 'Neutra', 'Ghigno', 'Risata'] },
+  { id: 'barba', nome: 'Barba', icona: '🧔', opzioni: ['Niente', 'Baffi', 'Pizzetto', 'Corta', 'Folta'] },
+  { id: 'occhiali', nome: 'Occhiali', icona: '🕶️', opzioni: ['Niente', 'Da vista', 'Da sole'] },
+  { id: 'maglia', nome: 'Maglia', icona: '👕', colori: MAGLIE }
+];
+
+const TRATTO_BY_ID = Object.fromEntries(TRATTI.map(t => [t.id, t]));
+
+function trattoMax(id) {
+  const t = TRATTO_BY_ID[id];
+  if (!t) return 0;
+  return (t.colori || t.opzioni).length - 1;
+}
+
+/** Normalizza i tratti: solo interi entro i limiti, mai testo che arrivi da fuori. */
+function normalizzaTratti(p) {
+  const out = {};
+  for (const t of TRATTI) {
+    const v = Math.round(Number(p?.[t.id]));
+    out[t.id] = isFinite(v) ? Math.max(0, Math.min(trattoMax(t.id), v)) : 0;
+  }
+  return out;
+}
+
+function trattiACaso() {
+  const out = {};
+  for (const t of TRATTI) out[t.id] = Math.floor(Math.random() * (trattoMax(t.id) + 1));
+  return out;
+}
+
+function _mix(hex, q, verso) {
+  const n = parseInt(String(hex).slice(1), 16);
+  const f = c => Math.round(verso ? c + (255 - c) * q : c * (1 - q));
+  return `#${[f(n >> 16 & 255), f(n >> 8 & 255), f(n & 255)].map(c => c.toString(16).padStart(2, '0')).join('')}`;
+}
+const schiarisci = (h, q) => _mix(h, q, true);
+const scurisci = (h, q) => _mix(h, q, false);
+
+/** SVG del personaggio. Ogni valore esce da tabelle interne: nessun testo dell'utente finisce nel markup. */
+function personaggioSvg(tratti) {
+  const t = normalizzaTratti(tratti);
+  const pelle = PELLE[t.pelle];
+  const ombra = scurisci(pelle, 0.16);
+  const cap = CAPELLI_COLORI[t.coloreCapelli];
+  const capScuro = scurisci(cap, 0.3);
+  const maglia = MAGLIE[t.maglia];
+  const magliaScura = scurisci(maglia, 0.24);
+  const spalle = [26, 32, 38][t.corpo];
+  const collo = [8, 9.5, 11][t.corpo];
+  const tratto = scurisci(pelle, 0.45);
+
+  const corpo = `
+    <path d="M60 84 C${60 - spalle} 84 ${60 - spalle - 10} 99 ${60 - spalle - 13} 120 L${60 + spalle + 13} 120 C${60 + spalle + 10} 99 ${60 + spalle} 84 60 84 Z" fill="${maglia}"/>
+    <path d="M${60 - 11} 85 C${60 - 9} 96 ${60 + 9} 96 ${60 + 11} 85 C${60 + 5} 92 ${60 - 5} 92 ${60 - 11} 85 Z" fill="${magliaScura}"/>`;
+  const nuca = `<rect x="${60 - collo}" y="66" width="${collo * 2}" height="26" rx="${collo * 0.7}" fill="${ombra}"/>`;
+  const orecchie = `<ellipse cx="33" cy="54" rx="5" ry="7.5" fill="${pelle}"/><ellipse cx="87" cy="54" rx="5" ry="7.5" fill="${pelle}"/>`;
+  const testa = `<ellipse cx="60" cy="50" rx="27" ry="30" fill="${pelle}"/>`;
+
+  // Calotta: segue il cranio in alto e si chiude sull'attaccatura
+  const calotta = (attaccatura, sporgenza = 0) =>
+    `M33 ${50 + sporgenza} A27 ${30 + sporgenza} 0 0 1 87 ${50 + sporgenza} Q87 ${attaccatura - 6} 60 ${attaccatura} Q33 ${attaccatura - 6} 33 ${50 + sporgenza} Z`;
+
+  const CAPELLI = [
+    `<path d="${calotta(46)}" fill="${cap}" opacity=".78"/>`,
+    `<path d="${calotta(36)}" fill="${cap}"/>`,
+    `<path d="${calotta(39)}" fill="${cap}"/><path d="M45 28 C56 10 82 14 89 34 C79 23 63 22 50 34 Z" fill="${cap}"/>`,
+    `<path d="${calotta(36, 2)}" fill="${cap}"/><g fill="${cap}"><circle cx="40" cy="26" r="10"/><circle cx="56" cy="20" r="11"/><circle cx="72" cy="22" r="11"/><circle cx="84" cy="32" r="9"/></g>`,
+    `<ellipse cx="60" cy="34" rx="36" ry="27" fill="${cap}"/><path d="${calotta(38)}" fill="${cap}"/>`,
+    `<path d="${calotta(36)}" fill="${cap}"/>`,
+    `<path d="${calotta(34)}" fill="${cap}"/><g fill="${capScuro}" opacity=".45"><rect x="46" y="22" width="5" height="15" rx="2.5"/><rect x="57.5" y="19" width="5" height="15" rx="2.5"/><rect x="69" y="22" width="5" height="15" rx="2.5"/></g>`,
+    ''
+  ];
+
+  const SOPRACCIGLIA = [
+    `<g fill="${capScuro}"><rect x="42" y="40" width="15" height="3.6" rx="1.8"/><rect x="63" y="40" width="15" height="3.6" rx="1.8"/></g>`,
+    `<g fill="${capScuro}"><path d="M42 43 Q49.5 36 57 43 L57 45.4 Q49.5 39.4 42 45.4 Z"/><path d="M63 43 Q70.5 36 78 43 L78 45.4 Q70.5 39.4 63 45.4 Z"/></g>`,
+    `<g fill="${capScuro}"><rect x="41" y="38" width="17" height="6" rx="3"/><rect x="62" y="38" width="17" height="6" rx="3"/></g>`
+  ];
+
+  const OCCHI = [
+    `<g><ellipse cx="49" cy="53" rx="5" ry="4.4" fill="#fff"/><ellipse cx="71" cy="53" rx="5" ry="4.4" fill="#fff"/><circle cx="49.8" cy="53.4" r="2.4" fill="#2B2118"/><circle cx="71.8" cy="53.4" r="2.4" fill="#2B2118"/></g>`,
+    `<g><ellipse cx="49" cy="53" rx="6.4" ry="5.8" fill="#fff"/><ellipse cx="71" cy="53" rx="6.4" ry="5.8" fill="#fff"/><circle cx="49.9" cy="53.6" r="3.1" fill="#2B2118"/><circle cx="71.9" cy="53.6" r="3.1" fill="#2B2118"/></g>`,
+    `<g fill="#2B2118"><rect x="43.5" y="51.4" width="11" height="3.2" rx="1.6"/><rect x="65.5" y="51.4" width="11" height="3.2" rx="1.6"/></g>`,
+    `<g><path d="M43.5 54.6 Q49 47.6 54.5 54.6 Z" fill="#fff"/><path d="M65.5 54.6 Q71 47.6 76.5 54.6 Z" fill="#fff"/><circle cx="49" cy="52.6" r="2.4" fill="#2B2118"/><circle cx="71" cy="52.6" r="2.4" fill="#2B2118"/></g>`
+  ];
+
+  const NASO = [
+    `<path d="M60 56 L60 62 Q62.4 63.6 64 62" stroke="${tratto}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+    `<path d="M59 54 L56.6 63 Q60 65.4 63.6 63" stroke="${tratto}" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
+    `<path d="M59 51 L54.6 64.6 Q60 68 65.6 63.6" stroke="${tratto}" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`
+  ];
+
+  const BOCCA = [
+    `<path d="M50 69 Q60 77.4 70 69" stroke="${tratto}" stroke-width="2.7" fill="none" stroke-linecap="round"/>`,
+    `<rect x="52" y="70" width="16" height="2.8" rx="1.4" fill="${tratto}"/>`,
+    `<path d="M50 72 Q60 76 70 68" stroke="${tratto}" stroke-width="2.7" fill="none" stroke-linecap="round"/>`,
+    `<path d="M49.5 68 Q60 80.4 70.5 68 Z" fill="${scurisci(pelle, 0.55)}"/><path d="M52.5 69.2 Q60 72.4 67.5 69.2 Z" fill="#fff"/>`
+  ];
+
+  const BARBA = [
+    '',
+    `<path d="M51 65.6 Q60 62.4 69 65.6 L69 68 Q60 65 51 68 Z" fill="${cap}"/>`,
+    `<path d="M52 66 Q60 63 68 66 L68 68.2 Q60 65.6 52 68.2 Z" fill="${cap}"/><path d="M54.6 76 Q60 73.6 65.4 76 Q63.4 83.6 60 83.6 Q56.6 83.6 54.6 76 Z" fill="${cap}"/>`,
+    `<path d="M33 52 C33 72 44 80 60 80 C76 80 87 72 87 52 C87 68 76 71 60 71 C44 71 33 68 33 52 Z" fill="${cap}" opacity=".9"/><path d="M51 65.6 Q60 62.4 69 65.6 L69 68 Q60 65 51 68 Z" fill="${cap}"/>`,
+    `<path d="M32 46 C32 82 44 92 60 92 C76 92 88 82 88 46 C88 74 78 70 60 70 C42 70 32 74 32 46 Z" fill="${cap}"/><path d="M51 65 Q60 61.6 69 65 L69 67.6 Q60 64.4 51 67.6 Z" fill="${capScuro}"/>`
+  ];
+
+  const OCCHIALI = [
+    '',
+    `<g fill="none" stroke="#3A4453" stroke-width="2.2"><circle cx="49" cy="53" r="8.6"/><circle cx="71" cy="53" r="8.6"/><path d="M57.6 53 L62.4 53"/><path d="M40.4 50 L33 47.6"/><path d="M79.6 50 L87 47.6"/></g>`,
+    `<g><path d="M39 46.6 h18.6 a2.2 2.2 0 0 1 2.2 2.2 v5.2 a8 8 0 0 1 -23 0 v-5.2 a2.2 2.2 0 0 1 2.2 -2.2 Z" fill="#1B2330"/><path d="M62.4 46.6 h18.6 a2.2 2.2 0 0 1 2.2 2.2 v5.2 a8 8 0 0 1 -23 0 v-5.2 a2.2 2.2 0 0 1 2.2 -2.2 Z" fill="#1B2330"/><path d="M57.6 49 L62.4 49" stroke="#1B2330" stroke-width="2.6"/></g>`
+  ];
+
+  // Lungo e rasta hanno anche una parte che sta dietro la testa
+  const DIETRO = {
+    5: `<path d="M28 48 C28 20 92 20 92 48 L92 96 C92 80 85 74 85 54 Q85 36 60 36 Q35 36 35 54 C35 74 28 80 28 96 Z" fill="${cap}"/>`,
+    6: `<g fill="${cap}"><rect x="30" y="44" width="6.5" height="44" rx="3.2"/><rect x="39" y="50" width="6.5" height="36" rx="3.2"/><rect x="74.5" y="50" width="6.5" height="36" rx="3.2"/><rect x="83.5" y="44" width="6.5" height="44" rx="3.2"/></g>`
+  };
+  const dietro = DIETRO[t.capelli] || '';
+  const sopra = CAPELLI[t.capelli];
+
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Personaggio">
+    ${dietro}${nuca}${corpo}${orecchie}${testa}
+    ${BARBA[t.barba]}${sopra}
+    ${SOPRACCIGLIA[t.sopracciglia]}${OCCHI[t.occhi]}${OCCHIALI[t.occhiali]}
+    ${NASO[t.naso]}${BOCCA[t.bocca]}
+  </svg>`;
+}
+
+/* ---------- Stili della carta ---------- */
+
+const STILI_CARTA = [
+  { id: 'classico', nome: 'Classico', come: 'Sempre disponibile', req: () => true },
+  { id: 'raggi', nome: 'Raggi', come: '5 presenze', req: s => s.presenze >= 5 },
+  { id: 'stelle', nome: 'Stelle', come: 'Primo MVP', req: s => s.mvp >= 1 },
+  { id: 'onde', nome: 'Onde', come: '5 badge', req: s => s.badge >= 5 },
+  { id: 'fiamme', nome: 'Fiamme', come: '20 presenze', req: s => s.presenze >= 20 },
+  { id: 'campione', nome: 'Campione', come: 'Overall 85', req: s => s.overall >= 85 }
+];
+
+/** Elenco degli stili con il loro stato di sblocco per un giocatore. */
+function stiliCarta(st) {
+  const base = {
+    presenze: st?.totali?.presenze || 0,
+    mvp: st?.totali?.mvp || 0,
+    badge: (st?.badge || []).length,
+    overall: st?.carta?.overall || 0
+  };
+  return STILI_CARTA.map(s => ({ id: s.id, nome: s.nome, come: s.come, sbloccato: !!s.req(base) }));
+}
+
+/** Lo stile scelto vale solo se sbloccato, altrimenti si torna al classico. */
+function stileAttivo(st, scelto) {
+  const voce = stiliCarta(st).find(s => s.id === scelto);
+  return voce && voce.sbloccato ? voce.id : 'classico';
 }
 
 const fbApp = initializeApp(firebaseConfig);
@@ -3481,6 +3689,7 @@ function renderCarta(pid) {
   ensurePhoto(pid);
   const foto = S.photos[pid];
   const rarita = carta?.rarita || 'bronzo';
+  const stile = stileAttivo(st, p.stileCarta);
   const nome = (p.soprannome || p.nome || '').toUpperCase();
   const voci = carta?.voci || [];
   const overall = carta?.overall;
@@ -3489,15 +3698,17 @@ function renderCarta(pid) {
     : t ? `${t.presenze} partite · ${t.gol} gol · ${t.assist || 0} assist` : '';
   return `
     <div class="carta-wrap">
-    <div class="carta ${esc(rarita)}">
+    <div class="carta ${esc(rarita)} stile-${esc(stile)}">
       <div class="carta-top">
         <div class="carta-id">
           <span class="ov ${overall == null ? 'nuovo' : ''}">${overall != null ? overall : 'NEW'}</span>
           <span class="ru">${esc(RUOLO_SIGLA[p.ruolo] || 'GIO')}</span>
           <img class="crest-mini" src="assets/icon-192.png" alt="">
         </div>
-        <div class="carta-foto">
-          ${foto ? `<img src="${esc(foto)}" alt="">` : `<span class="emoji" style="--c:${esc(p.colore || '#5B6B82')}">${esc(p.avatar || '⚽')}</span>`}
+        <div class="carta-foto${p.personaggio ? ' persona' : ''}">
+          ${p.personaggio ? personaggioSvg(p.personaggio)
+            : foto ? `<img src="${esc(foto)}" alt="">`
+            : `<span class="emoji" style="--c:${esc(p.colore || '#5B6B82')}">${esc(p.avatar || '⚽')}</span>`}
         </div>
       </div>
       <div class="carta-nome">${esc(nome || '—')}</div>
@@ -3562,7 +3773,7 @@ function renderProfilo(pid) {
         ${!p.attivo ? '<span class="pill bad" style="align-self:center">Non attivo</span>' : ''}
       </div>
       ${renderMedagliere(pid)}
-      ${mine ? '<div class="row wrap" style="justify-content:center"><button class="btn small" data-act="editProfile">Modifica profilo</button><button class="btn small" data-act="changePhoto">Cambia foto</button></div>' : ''}
+      ${mine ? '<div class="row wrap" style="justify-content:center"><button class="btn small primary" data-act="editAvatar">Personalizza la carta</button><button class="btn small" data-act="editProfile">Modifica profilo</button><button class="btn small" data-act="changePhoto">Cambia foto</button></div>' : ''}
     </section>
 
     <div class="chips" role="group" aria-label="Periodo">
@@ -3679,6 +3890,68 @@ async function ridimensionaFoto(file, lato = 512, qualita = 0.78) {
   for (let q = qualita; url.length > 360000 && q > 0.35; q -= 0.12) url = canvas.toDataURL('image/jpeg', q);
   return url;
 }
+
+ACTIONS.editAvatar = () => {
+  const pid = S.myPlayerId;
+  const p = S.players[pid];
+  if (!p) return;
+  let tratti = normalizzaTratti(p.personaggio || {});
+  let stile = stileAttivo(S.playerStats[pid], p.stileCarta);
+  let scheda = TRATTI[0].id;
+  const stili = stiliCarta(S.playerStats[pid]);
+
+  const opzioniHtml = () => {
+    const t = TRATTO_BY_ID[scheda];
+    if (t.colori) {
+      return `<div class="av-colori">${t.colori.map((c, i) => `<button type="button" class="av-colore ${tratti[t.id] === i ? 'on' : ''}" style="--c:${c}" data-opz="${i}" aria-label="${esc(t.nome)} ${i + 1}" aria-pressed="${tratti[t.id] === i}"></button>`).join('')}</div>`;
+    }
+    return `<div class="av-opzioni">${t.opzioni.map((o, i) => `<button type="button" class="chip" data-opz="${i}" aria-pressed="${tratti[t.id] === i}">${esc(o)}</button>`).join('')}</div>`;
+  };
+
+  const body = () => `<div class="stack tight">
+    <div class="av-preview carta ${esc(S.playerStats[pid]?.carta?.rarita || 'bronzo')} stile-${esc(stile)}">${personaggioSvg(tratti)}</div>
+    <div class="av-schede" role="tablist">
+      ${TRATTI.map(t => `<button type="button" class="av-scheda ${scheda === t.id ? 'on' : ''}" data-scheda="${t.id}" aria-pressed="${scheda === t.id}" title="${esc(t.nome)}"><span>${t.icona}</span></button>`).join('')}
+    </div>
+    <p class="small" style="font-weight:600">${esc(TRATTO_BY_ID[scheda].nome)}</p>
+    ${opzioniHtml()}
+    <div class="row wrap" style="gap:.5rem">
+      <button type="button" class="btn small" data-caso>🎲 A caso</button>
+      ${p.personaggio ? '<button type="button" class="btn small danger" data-togli>Togli il personaggio</button>' : ''}
+    </div>
+    <h3 style="margin-top:.5rem">Sfondo della carta</h3>
+    <div class="av-stili">
+      ${stili.map(x => `<button type="button" class="av-stile carta ${esc(S.playerStats[pid]?.carta?.rarita || 'bronzo')} stile-${esc(x.id)} ${stile === x.id ? 'on' : ''} ${x.sbloccato ? '' : 'bloccato'}" data-stile="${esc(x.id)}" ${x.sbloccato ? '' : 'disabled'}>
+        <span class="n">${esc(x.nome)}</span><span class="r">${x.sbloccato ? '' : '🔒 ' + esc(x.come)}</span></button>`).join('')}
+    </div>
+  </div>`;
+
+  openSheet({
+    title: 'Personalizza la carta',
+    body: body(),
+    foot: `<button class="btn" data-close>Annulla</button><button class="btn primary" data-salva-av>Salva</button>`,
+    onMount(sheet, api) {
+      const aggiorna = () => api.setBody(body());
+      sheet.addEventListener('click', async ev => {
+        const sc = ev.target.closest('[data-scheda]');
+        if (sc) { scheda = sc.dataset.scheda; aggiorna(); return; }
+        const op = ev.target.closest('[data-opz]');
+        if (op) { tratti[scheda] = Number(op.dataset.opz); aggiorna(); return; }
+        if (ev.target.closest('[data-caso]')) { tratti = trattiACaso(); aggiorna(); return; }
+        const stl = ev.target.closest('[data-stile]');
+        if (stl) { stile = stl.dataset.stile; aggiorna(); return; }
+        if (ev.target.closest('[data-togli]')) {
+          api.close();
+          await guard(() => updateDoc(doc(db, 'players', pid), { personaggio: deleteField() }), 'Personaggio rimosso');
+          return;
+        }
+        if (!ev.target.closest('[data-salva-av]')) return;
+        api.close();
+        await guard(() => updateDoc(doc(db, 'players', pid), { personaggio: normalizzaTratti(tratti), stileCarta: stile }), 'Carta aggiornata');
+      });
+    }
+  });
+};
 
 ACTIONS.changePhoto = () => {
   const pid = S.myPlayerId;
