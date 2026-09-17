@@ -213,6 +213,25 @@ p { margin: 0; }
 }
 .pagella.top { background: color-mix(in srgb, var(--ok) 22%, var(--surface)); color: var(--ok); }
 .pagella.giu { background: color-mix(in srgb, var(--rosso) 18%, var(--surface)); color: var(--rosso); }
+/* Tabellino: gol e assist segnati dai giocatori */
+.mio-tab { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+.mio-btn {
+  min-height: 92px; flex-direction: column; gap: .15rem; padding: .7rem .5rem;
+  font-family: var(--font-display); font-size: 1rem; line-height: 1.1; position: relative;
+}
+.mio-btn .ico { font-size: 1.8rem; line-height: 1; }
+.mio-btn em {
+  font-style: normal; font-family: var(--font-display); font-weight: 700; font-size: 1.5rem;
+  line-height: 1; margin-top: .1rem;
+}
+.tab-lista { list-style: none; margin: 0; padding: 0; }
+.tab-lista li { display: flex; align-items: center; gap: .5rem; padding: .45rem 0; border-top: 1px solid var(--line); }
+.tab-lista li:first-child { border-top: 0; }
+.tab-n {
+  font-family: var(--font-display); font-weight: 700; font-size: .95rem; white-space: nowrap;
+  background: var(--surface-2); border-radius: 8px; padding: .12rem .5rem;
+}
+
 /* Pagelle: una scheda per giocatore */
 .vota { display: flex; flex-direction: column; align-items: center; gap: .55rem; text-align: center; }
 .vota-barra { width: 100%; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
@@ -490,8 +509,8 @@ textarea { min-height: 80px; resize: vertical; }
 .color-grid button { width: 34px; height: 34px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; background: var(--c); }
 .color-grid button[aria-pressed="true"] { border-color: var(--ink); }
 .stepper { display: inline-flex; align-items: center; gap: .2rem; }
-.stepper button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 700; }
-.stepper .v { min-width: 1.6rem; text-align: center; font-family: var(--font-display); font-weight: 600; }
+.stepper button { width: 42px; height: 42px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
+.stepper .v { min-width: 2rem; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; }
 
 /* ---------- Sheet ---------- */
 .sheet-backdrop { position: fixed; inset: 0; background: rgba(10, 20, 38, .55); z-index: 50; display: flex; align-items: flex-end; justify-content: center; animation: fade .15s ease; }
@@ -1466,6 +1485,7 @@ const S = {
   myReviews: {},
   myRatings: {},
   photos: {},
+  tabellino: {},
   route: { name: 'partita', id: null, sub: null },
   weather: {},
   creatingMatch: {},
@@ -1832,7 +1852,7 @@ function teardown() {
   Object.assign(S, {
     isAdmin: false, account: null, myPlayerId: null, players: {}, playersLoaded: false, fields: {}, playerStats: {}, statsLoaded: false,
     fieldStats: {}, yearAwards: {}, matches: [], matchesLoaded: false, currentId: null, presences: {}, presencesLoaded: false,
-    currentLogs: [], levels: {}, requests: [], myVotes: {}, myReviews: {}, myRatings: {}, photos: {}, configExists: null, config: { ...DEFAULT_CONFIG }
+    currentLogs: [], levels: {}, requests: [], myVotes: {}, myReviews: {}, myRatings: {}, photos: {}, tabellino: {}, configExists: null, config: { ...DEFAULT_CONFIG }
   });
 }
 
@@ -2062,8 +2082,15 @@ function subscribeCurrentMatch() {
   S.presences = {};
   S.presencesLoaded = false;
   S.currentLogs = [];
+  S.tabellino = {};
   const id = S.currentId;
   if (!id) return;
+  matchUnsubs.push(onSnapshot(collection(db, 'matches', id, 'tabellino'), snap => {
+    const tb = {};
+    snap.forEach(d => { tb[d.id] = d.data(); });
+    S.tabellino = tb;
+    render();
+  }, e => console.error('tabellino', e)));
   matchUnsubs.push(onSnapshot(collection(db, 'matches', id, 'presences'), snap => {
     const pr = {};
     snap.forEach(d => { pr[d.id] = d.data(); });
@@ -2377,7 +2404,9 @@ function renderPartita() {
 
   const lineup = currentLineup(m);
   out.push(renderHero(m, lineup));
-  if (m.stato !== 'annullata') out.push(renderMyPresence(m, lineup));
+  const tab = renderTabellino(m, lineup);
+  if (tab) out.push(tab);
+  if (m.stato !== 'annullata' && !tab) out.push(renderMyPresence(m, lineup));
   const passi = renderAdminSteps(m);
   if (passi) out.push(`<section class="card stack tight"><h2>Organizza</h2>${passi}</section>`);
   for (const x of post) out.push(renderPostMatch(x));
@@ -2396,6 +2425,8 @@ function renderHero(m, lineup) {
   const cd = relCountdown(chiusura);
   let stateLine;
   if (m.stato === 'annullata') stateLine = '';
+  else if (m.stato === 'giocata') stateLine = '<span class="countdown">Partita giocata: segnate gol, assist e voti</span>';
+  else if (nowMs() >= ms(m.inizio)) stateLine = '<span class="countdown">Palla al centro: segnate i gol qui sotto</span>';
   else if (m.stato === 'aperta' && cd) stateLine = `<span class="countdown">Iscrizioni aperte ancora per ${cd}</span>`;
   else stateLine = '<span class="countdown">Iscrizioni chiuse: ormai la pasta è calata</span>';
   const services = [f.coperto ? 'Coperto' : 'Scoperto', f.spogliatoi && 'Spogliatoi', f.docce && 'Docce', f.parcheggio && 'Parcheggio'].filter(Boolean);
@@ -2547,6 +2578,126 @@ function renderTeamsCard(m) {
       </div>
     </section>`;
 }
+
+/* ---------- Tabellino condiviso ---------- */
+
+function tabellinoAperto(m) {
+  if (!m || ['annullata', 'archiviata'].includes(m.stato)) return false;
+  if (nowMs() < ms(m.inizio)) return false;
+  if (m.stato === 'giocata') return ms(m.postPartitaFino) > nowMs();
+  return true;
+}
+
+function tabellinoPartecipanti(m, lineup) {
+  const inSquadre = [...(m.squadre?.a || []), ...(m.squadre?.b || [])].filter(k => S.players[k]);
+  if (inSquadre.length) return inSquadre;
+  const tit = lineup.titolari.filter(e => e.tipo === 'player' && S.players[e.playerId]).map(e => e.playerId);
+  const segnati = Object.keys(S.tabellino).filter(k => S.players[k]);
+  return [...new Set([...tit, ...segnati])];
+}
+
+function tabellinoVoce(pid) {
+  const t = S.tabellino[pid] || {};
+  return { gol: Number(t.gol) || 0, assist: Number(t.assist) || 0, da: t.aggiornatoDaPlayer || null };
+}
+
+async function scriviTabellino(m, pid, { gol, assist }) {
+  const prima = tabellinoVoce(pid);
+  const next = {
+    gol: Math.max(0, Math.min(30, Math.round(gol ?? prima.gol))),
+    assist: Math.max(0, Math.min(30, Math.round(assist ?? prima.assist))),
+    aggiornatoDaUid: S.user.uid,
+    aggiornatoDaPlayer: S.myPlayerId || null,
+    aggiornatoIl: serverTimestamp()
+  };
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'matches', m.id, 'tabellino', pid), next);
+  addLog(batch, {
+    matchId: m.id, azione: 'tabellino', target: pid,
+    prima: `${prima.gol}g ${prima.assist}a`, dopo: `${next.gol}g ${next.assist}a`
+  });
+  return batch.commit();
+}
+
+function renderTabellino(m, lineup) {
+  if (!tabellinoAperto(m)) return '';
+  const pid = S.myPlayerId;
+  const partecipanti = tabellinoPartecipanti(m, lineup);
+  if (!partecipanti.length) return '';
+  const mio = pid && S.players[pid] ? tabellinoVoce(pid) : null;
+  const gioco = pid && partecipanti.includes(pid);
+  const conGol = partecipanti.map(p => [p, tabellinoVoce(p)]).filter(([, v]) => v.gol || v.assist);
+  const totale = conGol.reduce((s, [, v]) => s + v.gol, 0);
+  const confermato = (m.marcatori || []).length > 0 || m.stato === 'giocata';
+  return `
+    <section class="card stack" aria-label="Gol e assist">
+      <div class="row between"><h2>Chi ha segnato?</h2>${totale ? `<span class="pill ok">${totale} gol</span>` : ''}</div>
+      ${gioco ? `<div class="mio-tab">
+        <button class="btn primary mio-btn" data-act="miaMarcatura" data-tipo="gol">
+          <span class="ico">⚽</span><span>Ho segnato</span><em>${mio.gol}</em></button>
+        <button class="btn mio-btn" data-act="miaMarcatura" data-tipo="assist">
+          <span class="ico">🅰️</span><span>Ho fatto assist</span><em>${mio.assist}</em></button>
+      </div>
+      ${mio.gol || mio.assist ? '<p class="tiny muted center">Tocca di nuovo per aggiungerne un altro. Per correggere usa il pulsante qui sotto.</p>' : ''}` : ''}
+      ${conGol.length ? `<ul class="tab-lista">${conGol.map(([p, v]) => `<li>
+        ${avatarHtml(p, 'sm')}<span class="grow ellipsis">${esc(playerName(p))}</span>
+        ${v.gol ? `<span class="tab-n">⚽ ${v.gol}</span>` : ''}
+        ${v.assist ? `<span class="tab-n">🅰️ ${v.assist}</span>` : ''}
+      </li>`).join('')}</ul>` : '<p class="small muted">Ancora nessun gol segnato. Segnalo tu appena succede.</p>'}
+      <button class="btn block" data-act="tabellinoPanel" data-id="${esc(m.id)}">Segna per tutti</button>
+      <p class="tiny muted">${confermato ? 'L\'admin ha registrato il risultato: da qui puoi ancora correggere finché i voti restano aperti.' : 'Quello che segnate qui finisce già pronto nel foglio del risultato dell\'admin.'}</p>
+    </section>`;
+}
+
+ACTIONS.miaMarcatura = async el => {
+  const m = currentMatch();
+  if (!m || !tabellinoAperto(m) || !S.myPlayerId) return;
+  const tipo = el.dataset.tipo;
+  const v = tabellinoVoce(S.myPlayerId);
+  if (navigator.vibrate) navigator.vibrate(15);
+  await guard(() => scriviTabellino(m, S.myPlayerId, {
+    gol: tipo === 'gol' ? v.gol + 1 : v.gol,
+    assist: tipo === 'assist' ? v.assist + 1 : v.assist
+  }), tipo === 'gol' ? 'Gol segnato ⚽' : 'Assist segnato 🅰️');
+};
+
+ACTIONS.tabellinoPanel = el => {
+  const m = S.matches.find(x => x.id === el.dataset.id) || currentMatch();
+  if (!m) return;
+  const lineup = currentLineup(m);
+  const partecipanti = tabellinoPartecipanti(m, lineup);
+  const riga = p => {
+    const v = tabellinoVoce(p);
+    const step = (tipo, val) => `<span class="stepper"><button type="button" data-tb="${esc(p)}" data-tipo="${tipo}" data-d="-1" aria-label="Meno ${tipo}">−</button><span class="v">${val}</span><button type="button" data-tb="${esc(p)}" data-tipo="${tipo}" data-d="1" aria-label="Più ${tipo}">+</button></span>`;
+    return `<div class="card flat stack tight" style="padding:.55rem">
+      <div class="row">${avatarHtml(p, 'sm')}<strong class="grow ellipsis">${esc(playerName(p))}</strong></div>
+      <div class="row between small"><span>⚽ Gol</span>${step('gol', v.gol)}</div>
+      <div class="row between small"><span>🅰️ Assist</span>${step('assist', v.assist)}</div>
+      ${v.da && v.da !== p ? `<p class="tiny muted">segnato da ${esc(playerName(v.da))}</p>` : ''}
+    </div>`;
+  };
+  openSheet({
+    title: 'Gol e assist',
+    body: `<div class="stack tight">
+      <p class="small muted">Chiunque può segnare per chiunque: resta scritto chi ha messo cosa.</p>
+      ${partecipanti.map(riga).join('')}
+    </div>`,
+    onMount(sheet, api) {
+      sheet.addEventListener('click', async ev => {
+        const b = ev.target.closest('[data-tb]');
+        if (!b) return;
+        const p = b.dataset.tb;
+        const d = Number(b.dataset.d);
+        const v = tabellinoVoce(p);
+        const next = { gol: v.gol, assist: v.assist };
+        next[b.dataset.tipo] = Math.max(0, v[b.dataset.tipo] + d);
+        const cont = b.parentElement.querySelector('.v');
+        if (cont) cont.textContent = next[b.dataset.tipo];
+        await guard(() => scriviTabellino(m, p, next));
+      });
+    }
+  });
+};
 
 /* ---------- Post-partita ---------- */
 
@@ -4062,6 +4213,15 @@ ACTIONS.carriersEditor = async el => {
   });
 };
 
+async function loadTabellino(matchId) {
+  const out = {};
+  try {
+    const snap = await getDocs(collection(db, 'matches', matchId, 'tabellino'));
+    snap.forEach(d => { out[d.id] = d.data(); });
+  } catch (e) { console.warn('tabellino', e); }
+  return out;
+}
+
 async function loadPresences(matchId) {
   const out = {};
   const snap = await getDocs(collection(db, 'matches', matchId, 'presences'));
@@ -4153,6 +4313,7 @@ ACTIONS.resultEditor = async el => {
   if (!m) return;
   closeAllSheets();
   const cn = S.config.nomiSquadre;
+  const tabDichiarato = id === S.currentId ? { ...S.tabellino } : await loadTabellino(id);
   let sq = { a: [...(m.squadre?.a || [])], b: [...(m.squadre?.b || [])] };
   let ospitiNomi = { ...(m.ospitiNomi || {}) };
   let autoTeams = false;
@@ -4162,8 +4323,19 @@ ACTIONS.resultEditor = async el => {
     sq = built.teams; ospitiNomi = { ...ospitiNomi, ...built.ospitiNomi }; autoTeams = true;
   }
   const all = [...sq.a, ...sq.b];
-  const gol = golByPlayerOfMatch(m);
+  let gol = golByPlayerOfMatch(m);
   const assist = {}; (m.assist || []).forEach(x => { assist[x.playerId] = x.n; });
+  // "Valgono se nessuno le cambia": quando l'admin non ha ancora messo mano, si parte dai dati dei giocatori
+  const daGiocatori = !(m.marcatori || []).length && !(m.assist || []).length;
+  let dichiarati = 0;
+  if (daGiocatori) {
+    for (const [pid, t] of Object.entries(tabDichiarato)) {
+      const g = Number(t?.gol) || 0;
+      const a = Number(t?.assist) || 0;
+      if (g) { gol[pid] = g; dichiarati += g; }
+      if (a) assist[pid] = a;
+    }
+  }
   const pali = {}; (m.pali || []).forEach(x => { pali[x.playerId] = x.n; });
   const st = { golA: Number(m.golA) || 0, golB: Number(m.golB) || 0, gol: { ...gol }, assist: { ...assist }, pali: { ...pali }, assenti: new Set(m.assenti || []) };
   const nameOf = k => teamMemberName({ ...m, ospitiNomi }, k);
@@ -4193,6 +4365,7 @@ ACTIONS.resultEditor = async el => {
       </div>
       ${teamBlock('a')}${teamBlock('b')}
       ${autoTeams ? '<p class="tiny muted">Squadre generate in automatico dai titolari: se non corrispondono, chiudi e usa Modifica squadre.</p>' : ''}
+      ${daGiocatori && dichiarati ? `<p class="tiny muted">Gol e assist arrivano da quello che si sono segnati i giocatori: controlla e salva, oppure correggi qui.</p>` : ''}
       <p class="tiny muted">Gli assenti vengono tolti dalla squadra e contano nelle statistiche di affidabilità.</p>
     </div>`;
   };
