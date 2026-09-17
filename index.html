@@ -3778,7 +3778,7 @@ function renderAdmin() {
       <div class="azioni-rapide">
         <button class="btn primary block azione" data-act="quickMatch"><span class="ico">📅</span><span>Nuova partita<em>${esc(dataCorta(prossimaDataLibera()))}</em></span></button>
         ${upcoming[0] ? `<button class="btn block azione" data-act="quickTeams" data-id="${esc(upcoming[0].id)}" data-force="1"><span class="ico">🎽</span><span>Genera squadre<em>${esc(dataCorta(upcoming[0].data))}</em></span></button>` : ''}
-        ${daChiudere[0] ? `<button class="btn block azione" data-act="resultEditor" data-id="${esc(daChiudere[0].id)}"><span class="ico">📝</span><span>Registra risultato<em>${esc(dataCorta(daChiudere[0].data))}</em></span></button>` : ''}
+        ${daChiudere[0] ? `<button class="btn block azione" data-act="resultEditor" data-id="${esc(daChiudere[0].id)}"><span class="ico">⚽</span><span>Gol e assist<em>${esc(dataCorta(daChiudere[0].data))}</em></span></button>` : ''}
         <button class="btn block azione" data-act="newMatch"><span class="ico">⚡</span><span>Straordinaria<em>data a scelta</em></span></button>
       </div>
     </section>
@@ -3895,10 +3895,10 @@ function openAdminMatch(id) {
       </div>
 
       <div class="card flat stack">
-        <h3>Risultato</h3>
+        <h3>Gol e assist</h3>
         ${!hasTeams ? '<p class="small muted">Senza squadre vengono generate in automatico dai titolari, poi puoi correggerle.</p>' : ''}
         <div class="row wrap">
-          <button class="btn small primary" data-act="resultEditor" data-id="${esc(m.id)}">${played ? 'Correggi risultato' : 'Registra risultato'}</button>
+          <button class="btn small primary" data-act="resultEditor" data-id="${esc(m.id)}">Gol e assist</button>
           ${m.stato === 'giocata' ? '<button class="btn small" data-act="archiveMatch">Chiudi voti e archivia</button>' : ''}
           ${m.stato === 'archiviata' ? '<button class="btn small" data-act="reopenPost">Riapri post-partita</button>' : ''}
         </div>
@@ -4084,11 +4084,11 @@ function renderAdminSteps(m) {
     actions = `<button class="btn small primary" data-act="quickTeams" data-id="${id}">${hasTeams ? 'Pubblica squadre' : 'Genera e pubblica squadre'}</button>
       <button class="btn small" data-act="teamsEditor" data-id="${id}">Modifica a mano</button>`;
   } else if (idx === 2) {
-    actions = `<button class="btn small primary" data-act="resultEditor" data-id="${id}">Registra risultato</button>
+    actions = `<button class="btn small primary" data-act="resultEditor" data-id="${id}">Gol e assist</button>
       <button class="btn small" data-act="teamsEditor" data-id="${id}">Modifica squadre</button>`;
   } else {
     actions = `<button class="btn small primary" data-act="archiveMatch" data-id="${id}">Chiudi voti e archivia</button>
-      <button class="btn small" data-act="resultEditor" data-id="${id}">Correggi risultato</button>`;
+      <button class="btn small" data-act="resultEditor" data-id="${id}">Gol e assist</button>`;
   }
   return `<div class="steps" role="group" aria-label="Organizzazione partita">
     <ol>${steps.map((s, i) => `<li class="${s.done ? 'done' : i === idx ? 'now' : ''}">${esc(s.nome)}</li>`).join('')}</ol>
@@ -4370,7 +4370,7 @@ ACTIONS.resultEditor = async el => {
     </div>`;
   };
   openSheet({
-    title: `Risultato ${formatDataBreve(m.data)}`,
+    title: `Gol e assist · ${formatDataBreve(m.data)}`,
     body: view(),
     foot: `<button class="btn" data-close>Annulla</button><button class="btn" data-saveres="arch">Salva e archivia</button><button class="btn primary" data-saveres="1">Salva e chiudi</button>`,
     onMount(sheet, api) {
