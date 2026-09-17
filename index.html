@@ -45,7 +45,7 @@
   --font-display: 'Fredoka', 'Baloo 2', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
   --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-  --tabbar-h: 64px;
+  --tabbar-h: 72px;
   --safe-b: env(safe-area-inset-bottom, 0px);
   color-scheme: light;
 }
@@ -213,13 +213,29 @@ p { margin: 0; }
 }
 .pagella.top { background: color-mix(in srgb, var(--ok) 22%, var(--surface)); color: var(--ok); }
 .pagella.giu { background: color-mix(in srgb, var(--rosso) 18%, var(--surface)); color: var(--rosso); }
-.rate-row { display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .5rem; padding: .45rem 0; border-bottom: 1px solid var(--line); }
-.rate-row input[type=range] { flex: 1 0 100%; accent-color: var(--azzurro); }
-.rate-val {
-  font-family: var(--font-display); font-weight: 700; font-variant-numeric: tabular-nums;
-  min-width: 2.3rem; text-align: center; color: var(--ink-soft);
+/* Pagelle: una scheda per giocatore */
+.vota { display: flex; flex-direction: column; align-items: center; gap: .55rem; text-align: center; }
+.vota-barra { width: 100%; height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+.vota-barra > i { display: block; height: 100%; background: var(--ok); border-radius: 999px; transition: width .25s ease; }
+.vota-conta { font-size: .78rem; color: var(--ink-soft); }
+.vota-faccia { width: 116px; height: 116px; }
+.vota-faccia img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; border: 3px solid var(--line); }
+.vota-faccia .emoji {
+  width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; font-size: 3rem;
+  background: color-mix(in srgb, var(--c) 25%, var(--surface)); border: 3px solid var(--line);
 }
-.rate-val.on { color: var(--ink); }
+.vota-nome { font-size: 1.35rem; }
+.vota-griglia { display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem; width: 100%; }
+.voto-n {
+  min-height: 56px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface); color: var(--ink);
+  font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; cursor: pointer;
+  transition: transform .08s ease, background .15s ease;
+}
+.voto-n:active { transform: scale(.94); }
+.voto-n.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.voto-n.alto.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+.voto-n.basso.on { background: var(--rosso); border-color: var(--rosso); color: #fff; }
+.vota-nav { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; width: 100%; }
 .avatar.foto { overflow: hidden; padding: 0; }
 .avatar.foto img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -230,15 +246,15 @@ main#view {
 }
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(3, 1fr);
   height: calc(var(--tabbar-h) + var(--safe-b)); padding-bottom: var(--safe-b);
   background: var(--surface); border-top: 1px solid var(--line);
 }
 .tabbar button {
   border: 0; background: none; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 2px; font-size: .7rem; color: var(--ink-soft); cursor: pointer; padding: 0;
+  gap: 3px; font-size: .82rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; padding: 0;
 }
-.tabbar button .ico { font-size: 1.3rem; line-height: 1; filter: grayscale(1); opacity: .7; }
+.tabbar button .ico { font-size: 1.6rem; line-height: 1; filter: grayscale(1); opacity: .65; }
 .tabbar button[aria-current="page"] { color: var(--ink); font-weight: 600; }
 .tabbar button[aria-current="page"] .ico { filter: none; opacity: 1; }
 .tabbar button .dot { position: absolute; margin-left: 22px; margin-top: -26px; width: 8px; height: 8px; border-radius: 50%; background: var(--rosso); }
@@ -254,7 +270,7 @@ main#view {
 
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
-  min-height: 44px; padding: .55rem 1rem; border-radius: 12px;
+  min-height: 50px; padding: .6rem 1.1rem; border-radius: 12px;
   border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   font-weight: 600; cursor: pointer; text-decoration: none; text-align: center;
   transition: transform .08s ease;
@@ -263,16 +279,17 @@ main#view {
 .btn[disabled] { opacity: .5; cursor: not-allowed; }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .btn.danger { color: var(--rosso); border-color: color-mix(in srgb, var(--rosso) 40%, var(--line)); }
-.btn.ghost { background: transparent; border-color: transparent; }
+.btn.ghost { background: transparent; border-color: var(--line); }
 .btn.block { width: 100%; }
-.btn.small { min-height: 36px; padding: .35rem .7rem; font-size: .85rem; border-radius: 10px; }
+.btn.small { min-height: 42px; padding: .45rem .9rem; font-size: .92rem; border-radius: 11px; }
 .icon-btn { border: 0; background: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.2rem; display: inline-grid; place-items: center; color: var(--ink); }
 
 .chips { display: flex; gap: .4rem; overflow-x: auto; padding-bottom: .15rem; scrollbar-width: none; }
 .chips::-webkit-scrollbar { display: none; }
 .chip {
   flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px;
-  padding: .35rem .8rem; font-size: .85rem; cursor: pointer; white-space: nowrap; color: var(--ink);
+  min-height: 40px; display: inline-flex; align-items: center;
+  padding: .4rem 1rem; font-size: .92rem; cursor: pointer; white-space: nowrap; color: var(--ink);
 }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
 
@@ -299,7 +316,7 @@ main#view {
 .hero {
   position: relative; overflow: hidden;
   background: var(--navy); color: var(--crema);
-  border-radius: 22px; padding: 1.1rem 1.1rem 1rem;
+  border-radius: 22px; padding: .9rem 1rem .85rem;
   box-shadow: inset 0 0 0 3px var(--oro);
 }
 .hero::after {
@@ -309,12 +326,12 @@ main#view {
   pointer-events: none;
 }
 .hero > * { position: relative; z-index: 1; }
-.hero .when { font-family: var(--font-display); font-size: 2rem; font-weight: 600; line-height: 1.02; max-width: 72%; }
-.hero .time { font-family: var(--font-display); font-size: 1.15rem; opacity: .9; }
+.hero .when { font-family: var(--font-display); font-size: 1.7rem; font-weight: 600; line-height: 1.06; max-width: 80%; }
+.hero .time { font-family: var(--font-display); font-size: 1.05rem; opacity: .9; }
 .hero .field-link { display: inline-flex; gap: .35rem; align-items: center; background: none; border: 0; padding: 0; color: var(--crema); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-weight: 600; text-align: left; }
 .hero .meta { display: flex; flex-wrap: wrap; gap: .4rem .8rem; font-size: .85rem; max-width: 70%; opacity: .92; }
-.hero .hero-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
-.hero .btn { background: rgba(255, 246, 227, .12); border-color: rgba(255, 246, 227, .25); color: var(--crema); }
+.hero .hero-actions { display: flex; flex-wrap: wrap; gap: .45rem; margin-top: .7rem; }
+.hero .btn { background: rgba(9, 18, 34, .6); border-color: rgba(255, 246, 227, .28); color: var(--crema); }
 .hero .btn.primary { background: var(--crema); color: var(--navy); border-color: var(--crema); }
 .hero .weather { display: inline-flex; gap: .35rem; align-items: center; background: rgba(0,0,0,.25); padding: .2rem .55rem; border-radius: 999px; font-size: .85rem; }
 .hero .countdown { font-size: .85rem; }
@@ -325,18 +342,44 @@ main#view {
 .banner.gold { background: color-mix(in srgb, var(--oro) 28%, var(--surface)); color: var(--ink); }
 
 /* ---------- Presenza ---------- */
-.presence-buttons { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: .5rem; }
-.presence-buttons button {
-  min-height: 64px; border-radius: 14px; border: 2px solid var(--line); background: var(--surface);
-  font-family: var(--font-display); font-weight: 600; font-size: 1.05rem; cursor: pointer; color: var(--ink);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  transition: transform .08s ease, background .15s ease;
+.presence-buttons {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+  background: var(--surface-2); border: 2px solid var(--line); border-radius: 16px; padding: 4px;
 }
+.presence-buttons button {
+  min-height: 60px; border-radius: 12px; border: 0; background: transparent;
+  font-family: var(--font-display); font-weight: 600; font-size: .95rem; cursor: pointer; color: var(--ink-soft);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; white-space: nowrap;
+  transition: transform .08s ease, background .15s ease, color .15s ease;
+}
+.presence-buttons button .e { font-size: 1.45rem; line-height: 1; filter: grayscale(1); opacity: .65; }
+.presence-buttons button .t { line-height: 1.1; }
 .presence-buttons button:active { transform: scale(.96); }
-.presence-buttons button .e { font-size: 1.3rem; line-height: 1; }
-.presence-buttons button[data-stato="si"][aria-pressed="true"] { background: var(--ok); border-color: var(--ok); color: #fff; }
-.presence-buttons button[data-stato="forse"][aria-pressed="true"] { background: var(--oro); border-color: var(--oro); color: var(--navy); }
-.presence-buttons button[data-stato="no"][aria-pressed="true"] { background: var(--rosso); border-color: var(--rosso); color: #fff; }
+.presence-buttons button[aria-pressed="true"] { color: #fff; box-shadow: 0 2px 8px rgba(20, 37, 65, .22); }
+.presence-buttons button[aria-pressed="true"] .e { filter: none; opacity: 1; }
+.presence-buttons button[data-stato="si"][aria-pressed="true"] { background: var(--ok); }
+.presence-buttons button[data-stato="forse"][aria-pressed="true"] { background: var(--oro); color: var(--navy); }
+.presence-buttons button[data-stato="no"][aria-pressed="true"] { background: var(--rosso); }
+.presence-buttons button[disabled] { opacity: .55; cursor: not-allowed; }
+
+.azioni-rapide { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+.azioni-rapide .azione {
+  min-height: 74px; flex-direction: column; gap: .2rem; padding: .6rem .5rem;
+  font-size: .95rem; line-height: 1.15; text-align: center;
+}
+.azioni-rapide .azione .ico { font-size: 1.5rem; line-height: 1; }
+.azioni-rapide .azione em { display: block; font-style: normal; font-weight: 500; font-size: .74rem; opacity: .75; }
+
+/* Sotto-schede (Partite / Classifiche) */
+.segmented {
+  display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px;
+  background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 4px;
+}
+.seg-btn {
+  min-height: 44px; border: 0; border-radius: 10px; background: transparent; cursor: pointer;
+  font-family: var(--font-display); font-weight: 600; font-size: .98rem; color: var(--ink-soft);
+}
+.seg-btn[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
 
 .meter { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; border: 1px solid var(--line); }
 .meter > i { display: block; height: 100%; background: var(--ok); border-radius: 999px; transition: width .3s ease; }
@@ -501,7 +544,7 @@ textarea { min-height: 80px; resize: vertical; }
 
 @media (min-width: 700px) {
   main#view { padding-top: 1.5rem; }
-  .hero .when { font-size: 2.4rem; }
+  .hero .when { font-size: 2.2rem; }
 }
 
 </style>
@@ -522,9 +565,7 @@ textarea { min-height: 80px; resize: vertical; }
   <main id="view"></main>
   <nav class="tabbar" aria-label="Navigazione principale">
     <button data-act="go" data-href="#/partita" data-tab="partita"><span class="ico">⚽</span>Partita</button>
-    <button data-act="go" data-href="#/classifiche" data-tab="classifiche"><span class="ico">🏆</span>Classifiche</button>
     <button data-act="go" data-href="#/storico" data-tab="storico"><span class="ico">📚</span>Storico</button>
-    <button data-act="go" data-href="#/campi" data-tab="campi"><span class="ico">🏟️</span>Campi</button>
     <button data-act="go" data-href="#/profilo" data-tab="profilo"><span class="ico">👤</span>Profilo<span class="dot hidden"></span></button>
   </nav>
 </div>
@@ -1720,8 +1761,8 @@ function doRender() {
   let html = '';
   try {
     switch (S.route.name) {
-      case 'classifiche': html = renderClassifiche(); break;
-      case 'storico': html = S.route.id ? renderPartitaDettaglio(S.route.id) : renderStorico(); break;
+      case 'classifiche': html = renderArchivio('classifiche'); break;
+      case 'storico': html = S.route.id ? renderPartitaDettaglio(S.route.id) : renderArchivio('partite'); break;
       case 'campi': html = S.route.id ? renderCampoDettaglio(S.route.id) : renderCampi(); break;
       case 'profilo': html = renderProfilo(S.myPlayerId); break;
       case 'giocatore': html = renderProfilo(S.route.id); break;
@@ -1736,8 +1777,9 @@ function doRender() {
   const mb = $('#matchbar');
   if (mb) { try { mb.innerHTML = renderMatchBar(); } catch (e) { console.error(e); mb.innerHTML = ''; } }
   window.scrollTo(0, y);
-  const tab = ['partita', 'classifiche', 'storico', 'campi'].includes(S.route.name) ? S.route.name
-    : (S.route.name === 'giocatore' && S.route.id !== S.myPlayerId) ? 'classifiche' : 'profilo';
+  const tab = S.route.name === 'partita' ? 'partita'
+    : ['storico', 'classifiche', 'campi'].includes(S.route.name) ? 'storico'
+    : (S.route.name === 'giocatore' && S.route.id !== S.myPlayerId) ? 'storico' : 'profilo';
   $$('.tabbar button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === tab ? 'page' : 'false'));
   const pending = S.isAdmin && S.requests.filter(r => r.stato === 'in_attesa').length > 0;
   $('.tabbar button[data-tab="profilo"] .dot')?.classList.toggle('hidden', !pending);
@@ -2335,9 +2377,11 @@ function renderPartita() {
 
   const lineup = currentLineup(m);
   out.push(renderHero(m, lineup));
+  if (m.stato !== 'annullata') out.push(renderMyPresence(m, lineup));
+  const passi = renderAdminSteps(m);
+  if (passi) out.push(`<section class="card stack tight"><h2>Organizza</h2>${passi}</section>`);
   for (const x of post) out.push(renderPostMatch(x));
   if (m.stato !== 'annullata') {
-    out.push(renderMyPresence(m, lineup));
     out.push(renderLineupCard(m, lineup));
     out.push(renderTeamsCard(m));
   }
@@ -2378,7 +2422,6 @@ function renderHero(m, lineup) {
         ${m.stato !== 'annullata' ? '<button class="btn small" data-act="shareMatch">WhatsApp</button><button class="btn small" data-act="calendar">Calendario</button>' : ''}
         ${S.isAdmin ? `<button class="btn small" data-act="adminMatch" data-id="${esc(m.id)}">Gestisci</button>` : ''}
       </div>
-      ${renderAdminSteps(m)}
     </section>`;
 }
 
@@ -2409,7 +2452,7 @@ function renderMyPresence(m, lineup) {
 
 function presenceButtons(pid, stato, disabled) {
   const opts = [['si', '✅', 'Ci sono'], ['forse', '🤔', 'Forse'], ['no', '❌', 'Non vengo']];
-  return opts.map(([k, e, l]) => `<button data-act="setPresence" data-pid="${esc(pid)}" data-stato="${k}" aria-pressed="${stato === k}" ${disabled ? 'disabled' : ''}><span class="e">${e}</span>${l}</button>`).join('');
+  return opts.map(([k, e, l]) => `<button data-act="setPresence" data-pid="${esc(pid)}" data-stato="${k}" aria-pressed="${stato === k}" ${disabled ? 'disabled' : ''}><span class="e">${e}</span><span class="t">${l}</span></button>`).join('');
 }
 
 function presenceSub(pid) {
@@ -2738,40 +2781,63 @@ ACTIONS.ratePlayers = async el => {
   const altri = (m.giocatori || []).filter(id => id !== S.myPlayerId && S.players[id]);
   if (!altri.length) return;
   const voti = { ...((S.myRatings[matchId] || {}).voti || {}) };
-  const riga = pid => {
+  let i = Math.max(0, altri.findIndex(id => !voti[id]));
+  if (i < 0) i = 0;
+
+  const scheda = () => {
+    const pid = altri[i];
     const v = voti[pid];
-    return `<div class="rate-row" data-rate-row="${esc(pid)}">
-      <span class="row grow" style="min-width:0">${avatarHtml(pid, 'sm')}<span class="ellipsis">${esc(playerName(pid))}</span></span>
-      <span class="rate-val ${v ? 'on' : ''}">${v ? fmtNum(v, 1) : '–'}</span>
-      <input type="range" min="1" max="10" step="0.5" value="${v || 6}" data-rate="${esc(pid)}" aria-label="Voto per ${esc(playerName(pid))}">
-      ${v ? `<button type="button" class="btn small ghost" data-clear-rate="${esc(pid)}" aria-label="Togli il voto">✕</button>` : ''}
+    const fatti = altri.filter(id => voti[id]).length;
+    ensurePhoto(pid);
+    const foto = S.photos[pid];
+    const p = S.players[pid] || {};
+    return `<div class="vota">
+      <div class="vota-barra"><i style="width:${Math.round((fatti / altri.length) * 100)}%"></i></div>
+      <p class="vota-conta">${i + 1} di ${altri.length} · ${fatti} votati</p>
+      <div class="vota-faccia">
+        ${foto ? `<img src="${esc(foto)}" alt="">` : `<span class="emoji" style="--c:${esc(p.colore || '#5B6B82')}">${esc(p.avatar || '⚽')}</span>`}
+      </div>
+      <h3 class="vota-nome">${esc(playerName(pid))}</h3>
+      <div class="vota-griglia">
+        ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => `<button type="button" class="voto-n ${v === n ? 'on' : ''} ${n >= 7 ? 'alto' : n <= 4 ? 'basso' : ''}" data-voto="${n}">${n}</button>`).join('')}
+      </div>
+      <div class="vota-nav">
+        <button type="button" class="btn" data-vai="-1" ${i === 0 ? 'disabled' : ''}>‹ Indietro</button>
+        <button type="button" class="btn" data-vai="1">${i === altri.length - 1 ? 'Fine' : 'Salta ›'}</button>
+      </div>
     </div>`;
   };
-  const body = () => `<div class="stack tight">
-    <p class="small muted">Trascina per dare il voto, da 1 a 10. I voti restano segreti: a fine votazione si vede solo la media.</p>
-    ${altri.map(riga).join('')}
-  </div>`;
+
   openSheet({
     title: 'Pagelle',
-    body: body(),
-    foot: `<button class="btn" data-close>Annulla</button><button class="btn primary" data-save-rate>Salva voti</button>`,
+    body: scheda(),
+    foot: `<button class="btn" data-close>Chiudi</button><button class="btn primary" data-save-rate>Salva voti</button>`,
     onMount(sheet, api) {
-      sheet.addEventListener('input', ev => {
-        const sl = ev.target.closest('[data-rate]');
-        if (!sl) return;
-        const pid = sl.dataset.rate;
-        voti[pid] = Number(sl.value);
-        const row = [...sheet.querySelectorAll('[data-rate-row]')].find(x => x.dataset.rateRow === pid)?.querySelector('.rate-val');
-        if (row) { row.textContent = fmtNum(voti[pid], 1); row.classList.add('on'); }
-      });
+      const aggiorna = () => api.setBody(scheda());
       sheet.addEventListener('click', async ev => {
-        const cl = ev.target.closest('[data-clear-rate]');
-        if (cl) { delete voti[cl.dataset.clearRate]; api.setBody(body()); return; }
+        const n = ev.target.closest('[data-voto]');
+        if (n) {
+          const pid = altri[i];
+          const val = Number(n.dataset.voto);
+          if (voti[pid] === val) delete voti[pid]; else voti[pid] = val;
+          if (navigator.vibrate) navigator.vibrate(12);
+          if (voti[pid] && i < altri.length - 1) i++;
+          aggiorna();
+          return;
+        }
+        const vai = ev.target.closest('[data-vai]');
+        if (vai) {
+          const d = Number(vai.dataset.vai);
+          if (i + d >= altri.length) { toast('Sei alla fine: salva quando vuoi'); return; }
+          i = Math.max(0, Math.min(altri.length - 1, i + d));
+          aggiorna();
+          return;
+        }
         if (!ev.target.closest('[data-save-rate]')) return;
         const puliti = {};
         for (const [pid, v] of Object.entries(voti)) {
-          const n = Number(v);
-          if (altri.includes(pid) && isFinite(n) && n >= 1 && n <= 10) puliti[pid] = Math.round(n * 2) / 2;
+          const x = Number(v);
+          if (altri.includes(pid) && isFinite(x) && x >= 1 && x <= 10) puliti[pid] = Math.round(x * 2) / 2;
         }
         if (!Object.keys(puliti).length) { toast('Dai almeno un voto', 'err'); return; }
         api.close();
@@ -2900,6 +2966,16 @@ function statsFor(pid, periodo) {
   return periodo === 'carriera' ? st.totali : st.perAnno?.[periodo] || null;
 }
 
+function renderArchivio(sezione) {
+  const voce = (id, href, label) => `<button class="seg-btn" data-act="go" data-href="${href}" aria-pressed="${sezione === id}">${label}</button>`;
+  return `
+    <div class="segmented" role="group" aria-label="Sezione">
+      ${voce('partite', '#/storico', 'Partite')}
+      ${voce('classifiche', '#/classifiche', 'Classifiche')}
+    </div>
+    ${sezione === 'classifiche' ? renderClassifiche() : renderStorico()}`;
+}
+
 function renderClassifiche() {
   const years = availableYears();
   if (!UI.periodo) UI.periodo = years[0];
@@ -2920,7 +2996,6 @@ function renderClassifiche() {
     </div>` : '';
   const list = rows.slice(3);
   return `
-    <div class="section-title"><h1>Classifiche</h1></div>
     <div class="chips" role="group" aria-label="Periodo">
       ${years.map(y => `<button class="chip" data-act="setPeriodo" data-v="${y}" aria-pressed="${UI.periodo === y}">${y}</button>`).join('')}
       <button class="chip" data-act="setPeriodo" data-v="carriera" aria-pressed="${UI.periodo === 'carriera'}">Carriera</button>
@@ -2998,7 +3073,7 @@ function renderStorico() {
     .sort((a, b) => b.data.localeCompare(a.data));
   const names = S.config.nomiSquadre;
   return `
-    <div class="section-title"><h1>Storico</h1><span class="muted small">${list.length} partite</span></div>
+    <div class="section-title"><h2>Partite giocate</h2><span class="muted small">${list.length}</span></div>
     ${!list.length ? '<div class="card empty"><div class="big">📚</div>Qui compariranno le partite giocate.</div>' : ''}
     <section class="card" ${!list.length ? 'hidden' : ''}><ul class="plist">
       ${list.map(m => {
@@ -3120,6 +3195,7 @@ ACTIONS.campiSort = el => { UI.campiSort = el.dataset.v; render(); };
 
 function renderCampoDettaglio(id) {
   const f = S.fields[id];
+  // il ritorno alla lista completa vive qui: Campi non ha più una tab propria
   if (!f) return '<button class="btn ghost small" data-act="back">‹ Indietro</button><div class="card empty">Campo non trovato.</div>';
   const st = S.fieldStats[id] || {};
   const dir = mapsDirUrl(f);
@@ -3128,7 +3204,10 @@ function renderCampoDettaglio(id) {
   const names = S.config.nomiSquadre;
   const maxDist = Math.max(1, ...(st.distribuzione || [0]));
   return `
-    <button class="btn ghost small" data-act="back" style="align-self:flex-start">‹ Campi</button>
+    <div class="row between">
+      <button class="btn ghost small" data-act="back">‹ Indietro</button>
+      <button class="btn ghost small" data-act="go" data-href="#/campi">Tutti i campi</button>
+    </div>
     <section class="card stack">
       <div class="stack tight"><h1>${esc(f.nome)}</h1>
         <p class="muted">${esc([f.indirizzo, f.citta].filter(Boolean).join(', '))}</p></div>
@@ -3543,6 +3622,16 @@ function renderAdmin() {
   return `
     <div class="section-title"><h1>Area admin</h1><button class="btn small ghost" data-act="go" data-href="#/profilo">Chiudi</button></div>
 
+    <section class="card stack tight">
+      <h2>Scorciatoie</h2>
+      <div class="azioni-rapide">
+        <button class="btn primary block azione" data-act="quickMatch"><span class="ico">📅</span><span>Nuova partita<em>${esc(dataCorta(prossimaDataLibera()))}</em></span></button>
+        ${upcoming[0] ? `<button class="btn block azione" data-act="quickTeams" data-id="${esc(upcoming[0].id)}" data-force="1"><span class="ico">🎽</span><span>Genera squadre<em>${esc(dataCorta(upcoming[0].data))}</em></span></button>` : ''}
+        ${daChiudere[0] ? `<button class="btn block azione" data-act="resultEditor" data-id="${esc(daChiudere[0].id)}"><span class="ico">📝</span><span>Registra risultato<em>${esc(dataCorta(daChiudere[0].data))}</em></span></button>` : ''}
+        <button class="btn block azione" data-act="newMatch"><span class="ico">⚡</span><span>Straordinaria<em>data a scelta</em></span></button>
+      </div>
+    </section>
+
     ${pending.length || daChiudere.length ? `<section class="card stack">
       <h2>Da fare</h2>
       ${pending.length ? `<div class="stack tight"><h3>Richieste di accesso (${pending.length})</h3>
@@ -3553,13 +3642,13 @@ function renderAdmin() {
     </section>` : ''}
 
     <section class="card stack">
-      <div class="row between"><h2>Partite</h2><button class="btn small" data-act="newMatch">+ Straordinaria</button></div>
+      <h2>Partite</h2>
       ${upcoming.length ? `<ul class="plist">${upcoming.map(matchRow).join('')}</ul>` : '<p class="small muted">Nessuna partita in programma.</p>'}
       ${recenti.length ? `<details class="fold"><summary>Ultime giocate</summary><div class="fold-body"><ul class="plist">${recenti.map(matchRow).join('')}</ul></div></details>` : ''}
     </section>
 
     <section class="card stack">
-      <div class="row between"><h2>Giocatori (${players.filter(p => p.attivo).length})</h2><button class="btn small" data-act="newManagedPlayer">+ Profilo gestito</button></div>
+      <div class="row between"><h2>Giocatori (${players.filter(p => p.attivo).length})</h2><button class="btn small" data-act="newManagedPlayer">+ Giocatore</button></div>
       <ul class="admin-list">${players.map(p => `<li>${avatarHtml(p.id)}
         <div class="grow"><strong>${esc(p.nome)}</strong>
           <div class="row wrap" style="gap:.25rem">${!p.attivo ? '<span class="pill bad">Non attivo</span>' : ''}${p.gestito ? '<span class="pill">Gestito</span>' : ''}<span class="pill info">Livello ${S.levels[p.id] ?? 3}</span></div></div>
@@ -3746,6 +3835,39 @@ ACTIONS.deleteMatch = async el => {
   const ok = await confirmSheet({ title: 'Elimina partita', text: 'La partita sparisce dall\'app. Le presenze già inserite restano solo nel database. Se è la partita regolare del mercoledì verrà ricreata automaticamente: in quel caso usa "Annulla partita".', okText: 'Elimina', danger: true });
   if (!ok) return;
   await guard(() => deleteDoc(doc(db, 'matches', id)), 'Partita eliminata');
+};
+
+function prossimaDataLibera() {
+  const giorno = Number(S.config.giornoSettimana);
+  let d = nextWeekdayDate(todayStr(), giorno);
+  for (let i = 0; i < 12; i++) {
+    if (!S.matches.some(m => m.id === d)) return d;
+    d = addDaysStr(d, 7);
+  }
+  return d;
+}
+
+ACTIONS.quickMatch = async () => {
+  closeAllSheets();
+  const fieldId = S.config.campoPredefinito;
+  const campo = S.fields[fieldId];
+  if (!campo) { toast('Imposta prima il campo predefinito', 'err'); go('#/admin'); return; }
+  const data = prossimaDataLibera();
+  const ora = S.config.ora;
+  const posti = Number(campo.postiDefault) || 10;
+  const ok = await confirmSheet({
+    title: 'Nuova partita',
+    text: `<strong>${esc(formatDataEstesa(data))}</strong><br>ore ${esc(ora)} · ${esc(campo.nome)} · ${posti} posti<br><span class="small muted">Dopo puoi cambiare ora, campo e posti da Gestisci.</span>`,
+    okText: 'Crea partita'
+  });
+  if (!ok) return;
+  const payload = buildMatchData(data, ora, fieldId, 'regolare');
+  await guard(() => runTransaction(db, async tx => {
+    const ref = doc(db, 'matches', data);
+    const snap = await tx.get(ref);
+    if (snap.exists()) throw new Error('Esiste già una partita in quella data.');
+    tx.set(ref, payload);
+  }), 'Partita creata');
 };
 
 ACTIONS.newMatch = () => {
