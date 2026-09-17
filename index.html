@@ -753,6 +753,9 @@ const BADGES = [
   { id: 'tripletta', nome: 'Tripletta', emoji: '🎩', desc: 'Almeno 3 gol in una partita', metric: 'partite3gol', soglie: [1] },
   { id: 'poker', nome: 'Poker', emoji: '🃏', desc: 'Almeno 4 gol in una partita', metric: 'partite4gol', soglie: [1] },
   { id: 'bomber', nome: 'Bomber', emoji: '💣', desc: 'Gol in carriera', metric: 'gol', soglie: [25, 50, 100] },
+  { id: 'uomo_assist', nome: 'Uomo assist', emoji: '🎯', desc: 'Assist in carriera', metric: 'assist', soglie: [10, 25, 50] },
+  { id: 'regista', nome: 'Regista', emoji: '🎩', desc: 'Almeno 3 assist in una partita', metric: 'partite3assist', soglie: [1] },
+  { id: 'altruista', nome: 'Altruista', emoji: '🤲', desc: 'Più assist che gol dopo almeno 10 partite', metric: 'altruista', soglie: [1], ironico: true },
   { id: 'capocannoniere', nome: "Capocannoniere dell'anno", emoji: '👟', desc: 'Miglior marcatore di un anno concluso', tipo: 'annuale', award: 'capocannoniere' },
   { id: 'primo_mvp', nome: 'Primo MVP', emoji: '⭐', desc: 'Votato migliore in campo', metric: 'mvp', soglie: [1] },
   { id: 'mvp_seriale', nome: 'MVP seriale', emoji: '🌟', desc: 'Volte MVP', metric: 'mvp', soglie: [3, 5, 10] },
@@ -771,7 +774,6 @@ const BADGES = [
   { id: 'amnt', nome: 'Atletico ma non troppo', emoji: '🍝', desc: 'Rimasto su "Forse" 5 volte in un anno', metric: 'forseAnnoMax', soglie: [5], ironico: true },
   { id: 'fantasma', nome: 'Fantasma', emoji: '👻', desc: '3 ritiri last minute in un anno', metric: 'ritiriAnnoMax', soglie: [3], ironico: true },
   { id: 'scomparso', nome: 'Scomparso', emoji: '🕳️', desc: '2 assenze senza avvisare in un anno', metric: 'assenzeAnnoMax', soglie: [2], ironico: true },
-  { id: 'autogol_oro', nome: "Autogol d'oro", emoji: '🙃', desc: '3 autogol in carriera', metric: 'autogol', soglie: [3], ironico: true },
   { id: 're_pali', nome: 'Re dei pali', emoji: '🪵', desc: '5 pali o traverse in carriera', metric: 'pali', soglie: [5], ironico: true },
   { id: 'digiuno', nome: 'Digiuno', emoji: '🥢', desc: '10 partite consecutive senza gol', metric: 'senzaGolMax', soglie: [10], ironico: true, noPortiere: true },
   { id: 'nuvola_nera', nome: 'Nuvola nera', emoji: '🌧️', desc: '5 sconfitte consecutive', metric: 'sconfitteMax', soglie: [5], ironico: true },
@@ -793,7 +795,7 @@ function badgeLevelName(badge, livello) {
 function _emptyCounters() {
   return {
     presenze: 0, gol: 0, mediaGol: 0, vittorie: 0, pareggi: 0, sconfitte: 0, percVittorie: 0, mvp: 0,
-    autogol: 0, pali: 0, ritiriLastMinute: 0, assenze: 0, palloneVolte: 0, pettorineVolte: 0,
+    assist: 0, partite3assist: 0, pali: 0, ritiriLastMinute: 0, assenze: 0, palloneVolte: 0, pettorineVolte: 0,
     ospitiPortati: 0, primoIscrittoVolte: 0, entratoDaAttesaVolte: 0, restatoInAttesaVolte: 0,
     forseVolte: 0, recensioniCampo: 0, campiDiversi: 0, supereroe: 0, lastMinuteVolte: 0,
     partite2gol: 0, partite3gol: 0, partite4gol: 0, rimonte: 0
@@ -819,7 +821,7 @@ function _tsMs(v) {
 /**
  * Ricalcolo completo e idempotente.
  * input: {
- *   matches: [{ id, data, fieldId, stato, squadre, golA, golB, marcatori, autogol, pali, assenti,
+ *   matches: [{ id, data, fieldId, stato, squadre, golA, golB, marcatori, assist, pali, assenti,
  *               pallone, pettorine, mvp: [ids], inizio (ms), chiusura (ms), posti }],
  *   presencesByMatch: { matchId: { playerId: { stato, tsIscrizione, ospiti:[{id,nome,ts}] } } },
  *   reviewsByMatch: { matchId: { playerId: { fieldId, voto, criteri, commento, nascosto, ts } } },
@@ -885,11 +887,12 @@ function computeAllStats(input) {
     const votes = s.votiDati;
     const media = votes.length ? votes.reduce((a, b) => a + b, 0) / votes.length : 0;
     return {
-      presenze: t.presenze, gol: t.gol, mvp: t.mvp, autogol: t.autogol, pali: t.pali,
+      presenze: t.presenze, gol: t.gol, mvp: t.mvp, assist: t.assist, pali: t.pali,
+      altruista: t.presenze >= 10 && t.assist > t.gol ? 1 : 0,
       presenzeConsecutiveMax: s.serie.presenzeConsecutiveMax, vittorieMax: s.serie.vittorieMax,
       sconfitteMax: s.serie.sconfitteMax, pareggiMax: s.serie.pareggiMax, senzaGolMax: s.serie.senzaGolMax,
       senzaRitiriMax: s.serie.senzaRitiriMax, mvpConsecutiviMax: s.serie.mvpConsecutiviMax,
-      partite2gol: t.partite2gol, partite3gol: t.partite3gol, partite4gol: t.partite4gol, rimonte: t.rimonte,
+      partite2gol: t.partite2gol, partite3gol: t.partite3gol, partite4gol: t.partite4gol, rimonte: t.rimonte, partite3assist: t.partite3assist,
       supereroe: t.supereroe, primoIscrittoVolte: t.primoIscrittoVolte, magazzino: t.palloneVolte + t.pettorineVolte,
       ospitiPortati: t.ospitiPortati, campiDiversi: s.campi.size, recensioniCampo: t.recensioniCampo,
       forseAnnoMax: annoMax('forseVolte'), ritiriAnnoMax: annoMax('ritiriLastMinute'), assenzeAnnoMax: annoMax('assenze'),
@@ -925,7 +928,7 @@ function computeAllStats(input) {
     const giocatori = [...inTeams].filter(id => !String(id).startsWith('ospite:') && players[id]);
     const golA = Number(m.golA) || 0; const golB = Number(m.golB) || 0;
     const gol = golByPlayerOfMatch(m);
-    const autogol = {}; for (const x of m.autogol || []) autogol[x.playerId] = (autogol[x.playerId] || 0) + (Number(x.n) || 0);
+    const assist = {}; for (const x of m.assist || []) assist[x.playerId] = (assist[x.playerId] || 0) + (Number(x.n) || 0);
     const pali = {}; for (const x of m.pali || []) pali[x.playerId] = (pali[x.playerId] || 0) + (Number(x.n) || 0);
     const mvpSet = new Set(m.stato === 'archiviata' ? (m.mvp || []) : []);
     const presences = input.presencesByMatch?.[m.id] || {};
@@ -981,7 +984,8 @@ function computeAllStats(input) {
       inc(pid, anno, 'gol', g);
       if (esito === 'V') inc(pid, anno, 'vittorie'); else if (esito === 'S') inc(pid, anno, 'sconfitte'); else inc(pid, anno, 'pareggi');
       if (mvpSet.has(pid)) inc(pid, anno, 'mvp');
-      if (autogol[pid]) inc(pid, anno, 'autogol', autogol[pid]);
+      if (assist[pid]) inc(pid, anno, 'assist', assist[pid]);
+      if ((assist[pid] || 0) >= 3) inc(pid, anno, 'partite3assist');
       if (pali[pid]) inc(pid, anno, 'pali', pali[pid]);
       if (g >= 2) inc(pid, anno, 'partite2gol');
       if (g >= 3) inc(pid, anno, 'partite3gol');
@@ -1063,6 +1067,7 @@ function computeAllStats(input) {
     yearAwards[anno] = {
       anno, concluso,
       capocannoniere: topOf(anno, 'gol'),
+      reAssist: topOf(anno, 'assist'),
       mvpAnno: topOf(anno, 'mvp'),
       piuPresenze: topOf(anno, 'presenze'),
       piuVittorie: topOf(anno, 'vittorie'),
@@ -1154,6 +1159,7 @@ function computeAllStats(input) {
 const CLASSIFICHE = [
   { id: 'presenze', nome: 'Presenze', value: c => c.presenze, fmt: v => String(v) },
   { id: 'gol', nome: 'Gol', value: c => c.gol, fmt: v => String(v) },
+  { id: 'assist', nome: 'Assist', value: c => c.assist || 0, fmt: v => String(v) },
   { id: 'mediaGol', nome: 'Media gol', value: c => c.mediaGol, min: 5, fmt: v => v.toFixed(2).replace('.', ',') },
   { id: 'percVittorie', nome: '% vittorie', value: c => c.percVittorie, min: 5, fmt: v => `${String(v).replace('.', ',')}%` },
   { id: 'mvp', nome: 'MVP', value: c => c.mvp, fmt: v => String(v) },
@@ -2320,6 +2326,7 @@ function renderPostMatch(m) {
         <div class="center"><div class="n">${Number(m.golB) || 0}</div><div class="t">${esc(names.b)}</div></div>
       </div>
       ${marcatori.length ? `<p class="small center">⚽ ${marcatori.map(x => `${esc(playerName(x.playerId))}${x.gol > 1 ? ` ×${x.gol}` : ''}`).join(', ')}</p>` : ''}
+      ${(m.assist || []).length ? `<p class="small center muted">🅰️ ${m.assist.map(x => `${esc(playerName(x.playerId))}${x.n > 1 ? ` ×${x.n}` : ''}`).join(', ')}</p>` : ''}
       ${played ? `
         <div class="stack tight">
           <h3>MVP</h3>
@@ -2684,6 +2691,7 @@ function renderAlboDoro() {
     ${years.map(y => `<section class="card stack tight">
       <div class="row between"><h3>${y.anno}</h3>${y.concluso ? '<span class="pill warn">🏆 Concluso</span>' : '<span class="pill info">In corso</span>'}</div>
       ${awardLine('Capocannoniere', y.capocannoniere, v => `${v} gol`)}
+      ${(y.reAssist || []).length ? awardLine('Re degli assist', y.reAssist, v => `${v} assist`) : ''}
       ${awardLine('MVP', y.mvpAnno, v => `${v}×`)}
       ${awardLine('Più presenze', y.piuPresenze)}
       ${awardLine('Più vittorie', y.piuVittorie)}
@@ -2778,7 +2786,7 @@ function renderPartitaDettaglio(id) {
     ${played ? `<section class="card stack">
       <div class="scoreline"><div class="center"><div class="n">${Number(m.golA) || 0}</div><div class="t">${esc(names.a)}</div></div><div class="muted">–</div><div class="center"><div class="n">${Number(m.golB) || 0}</div><div class="t">${esc(names.b)}</div></div></div>
       ${marcatori.length ? `<p class="small center">⚽ ${marcatori.map(x => `${esc(playerName(x.playerId))}${x.gol > 1 ? ` ×${x.gol}` : ''}`).join(', ')}</p>` : ''}
-      ${(m.autogol || []).length ? `<p class="small center muted">Autogol: ${m.autogol.map(x => `${esc(playerName(x.playerId))}${x.n > 1 ? ` ×${x.n}` : ''}`).join(', ')}</p>` : ''}
+      ${(m.assist || []).length ? `<p class="small center muted">🅰️ Assist: ${m.assist.map(x => `${esc(playerName(x.playerId))}${x.n > 1 ? ` ×${x.n}` : ''}`).join(', ')}</p>` : ''}
       ${m.mvp?.length ? `<p class="center">⭐ MVP: <strong>${m.mvp.map(p => esc(playerName(p))).join(', ')}</strong></p>` : m.stato === 'giocata' ? '<p class="center small muted">Votazione MVP in corso</p>' : ''}
       ${teamsHtml(m, { clickable: true })}
       ${(m.assenti || []).length ? `<p class="small muted">Assenti: ${m.assenti.map(p => esc(playerName(p))).join(', ')}</p>` : ''}
@@ -3015,7 +3023,7 @@ function renderProfilo(pid) {
       <div class="kpis">
         <div class="kpi"><div class="v">${c.presenze}</div><div class="l">presenze</div></div>
         <div class="kpi"><div class="v">${c.gol}</div><div class="l">gol</div></div>
-        <div class="kpi"><div class="v">${fmtNum(c.mediaGol, 2)}</div><div class="l">media gol</div></div>
+        <div class="kpi"><div class="v">${c.assist || 0}</div><div class="l">assist</div></div>
         <div class="kpi"><div class="v">${c.vittorie}-${c.pareggi}-${c.sconfitte}</div><div class="l">V-P-S</div></div>
         <div class="kpi"><div class="v">${fmtNum(c.percVittorie)}%</div><div class="l">vittorie</div></div>
         <div class="kpi"><div class="v">${c.mvp}</div><div class="l">MVP</div></div>
@@ -3086,6 +3094,7 @@ function renderH2H(p1, p2, periodo) {
     <div class="stack tight">
       ${row('presenze', c1.presenze, c2.presenze)}
       ${row('gol', c1.gol, c2.gol)}
+      ${row('assist', c1.assist || 0, c2.assist || 0)}
       ${row('media gol', c1.mediaGol, c2.mediaGol, v => fmtNum(v, 2))}
       ${row('% vittorie', c1.percVittorie, c2.percVittorie, v => `${fmtNum(v)}%`)}
       ${row('MVP', c1.mvp, c2.mvp)}
@@ -3567,9 +3576,9 @@ ACTIONS.resultEditor = el => {
   const cn = S.config.nomiSquadre;
   const all = [...(m.squadre?.a || []), ...(m.squadre?.b || [])];
   const gol = golByPlayerOfMatch(m);
-  const auto = {}; (m.autogol || []).forEach(x => { auto[x.playerId] = x.n; });
+  const assist = {}; (m.assist || []).forEach(x => { assist[x.playerId] = x.n; });
   const pali = {}; (m.pali || []).forEach(x => { pali[x.playerId] = x.n; });
-  const st = { golA: Number(m.golA) || 0, golB: Number(m.golB) || 0, gol: { ...gol }, auto: { ...auto }, pali: { ...pali }, assenti: new Set(m.assenti || []) };
+  const st = { golA: Number(m.golA) || 0, golB: Number(m.golB) || 0, gol: { ...gol }, assist: { ...assist }, pali: { ...pali }, assenti: new Set(m.assenti || []) };
   const nameOf = k => teamMemberName(m, k);
   const stepper = (key, pid, v) => `<span class="stepper"><button type="button" data-step="${key}" data-pid="${esc(pid)}" data-d="-1" aria-label="Meno">−</button><span class="v">${v || 0}</span><button type="button" data-step="${key}" data-pid="${esc(pid)}" data-d="1" aria-label="Più">+</button></span>`;
   const teamBlock = k => `<div class="stack tight"><h3>${esc(cn[k])}</h3>
@@ -3577,13 +3586,12 @@ ACTIONS.resultEditor = el => {
       <div class="row between"><span class="row">${avatarHtml(pid, 'sm')}<strong class="ellipsis">${esc(nameOf(pid))}</strong></span>
         ${S.players[pid] ? `<label class="check small"><input type="checkbox" data-assente="${esc(pid)}" ${st.assenti.has(pid) ? 'checked' : ''}> Assente</label>` : ''}</div>
       ${st.assenti.has(pid) ? '' : `<div class="row between small"><span>Gol</span>${stepper('gol', pid, st.gol[pid])}</div>
-      <div class="row between small"><span>Autogol</span>${stepper('auto', pid, st.auto[pid])}</div>
+      <div class="row between small"><span>Assist</span>${stepper('assist', pid, st.assist[pid])}</div>
       <div class="row between small"><span>Pali/traverse</span>${stepper('pali', pid, st.pali[pid])}</div>`}
     </div>`).join('')}</div>`;
   const computed = () => {
     const sumTeam = k => (m.squadre?.[k] || []).filter(p => !st.assenti.has(p)).reduce((s, p) => s + (st.gol[p] || 0), 0);
-    const autoTeam = k => (m.squadre?.[k] || []).filter(p => !st.assenti.has(p)).reduce((s, p) => s + (st.auto[p] || 0), 0);
-    return { a: sumTeam('a') + autoTeam('b'), b: sumTeam('b') + autoTeam('a') };
+    return { a: sumTeam('a'), b: sumTeam('b') };
   };
   const view = () => {
     const c = computed();
@@ -3632,7 +3640,8 @@ ACTIONS.resultEditor = el => {
           squadre, golA: st.golA, golB: st.golB,
           giocatori: inT.filter(p => !String(p).startsWith('ospite:')),
           marcatori: list(st.gol).map(([playerId, g]) => ({ playerId, gol: g })),
-          autogol: list(st.auto).map(([playerId, n]) => ({ playerId, n })),
+          assist: list(st.assist).map(([playerId, n]) => ({ playerId, n })),
+          autogol: deleteField(),
           pali: list(st.pali).map(([playerId, n]) => ({ playerId, n })),
           assenti: [...st.assenti]
         };
