@@ -1,5 +1,5 @@
 // Service worker: guscio dell'app offline. Aumenta VERSIONE a ogni rilascio.
-const VERSIONE = 'atletico-v7';
+const VERSIONE = 'atletico-v8';
 const SHELL = [
   './', './index.html', './firebase-config.js', './manifest.json',
   './assets/logo.png', './assets/icon-192.png', './assets/icon-512.png', './assets/favicon.png', './assets/apple-touch-icon.png'
